@@ -40,6 +40,7 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
 .wrap{max-width:860px;margin:0 auto;padding:0 14px 90px}
@@ -695,6 +696,7 @@ $("#btnSave").addEventListener("click", async ()=>{
   const prev = records.find(r=>r.id===editingId);
   const rec = {...data, id: editingId || ("d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
     creado: prev?.creado || now, actualizado: now};
+  rec.resumen = resumenDiag(rec);
   const btn = $("#btnSave"); btn.disabled = true;
   try{
     await saveRecord(rec);
@@ -708,6 +710,14 @@ $("#btnSave").addEventListener("click", async ()=>{
     toast("No se guardó: " + (e?.code || e?.message || "error") + ". Intenta de nuevo.");
   }finally{ btn.disabled = false; }
 });
+
+function resumenDiag(r){
+  const req=[], rep=[];
+  SECCIONES.forEach(s=>s.items.forEach((it,i)=>{ const c=r.checklist?.[key(s,i)]; if(c?.r) req.push(`${it} (${c.r})`); if(c?.p) rep.push(`${it} (${c.p})`); }));
+  return { requiere:req.join(", "), repara:rep.join(", "), actividades:(r.actividades||[]).join(", "),
+    listo:r.listo?"Sí":"No", lavado:r.lavado?"Sí":"No",
+    tipo: r.tipo==="Otro" ? `Otro: ${r.tipoOtro}` : r.tipo, antiguedad: antiguedad(r.fabricacion, r.fechaDiag) ?? "" };
+}
 
 /* ---------- Registros ---------- */
 function filtered(desde, hasta, q, activos){
@@ -1142,6 +1152,10 @@ $("#otBtnSave").addEventListener("click", ()=>{
   if(ots.some(o=>o.folio===d.folio && o.id!==otEditingId) && !confirm(`La orden ${d.folio} ya está capturada. ¿Guardar otra con el mismo número?`)) return;
   const now = new Date().toISOString(), prev = ots.find(o=>o.id===otEditingId);
   const rec = {...d, id: otEditingId || ("o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)), creado: prev?.creado || now, actualizado: now};
+  rec.resumen = { partes:(rec.partes||[]).map(p=>`${p.desc}${p.num?` (${p.num})`:""} x${p.cant ?? ""}`).join(", "),
+    razones:(rec.razones||[]).map(c=>`${c} ${RAZON[c]||""}`).join(", "),
+    tRespuesta: diffMin(rec.fLlamada,rec.fArribo)===null ? "" : Math.round(diffMin(rec.fLlamada,rec.fArribo)),
+    tServicio: diffMin(rec.fArribo,rec.fTermino)===null ? "" : Math.round(diffMin(rec.fArribo,rec.fTermino)) };
   queue({action:"saveOT", record:rec}); renderAll();
   toast(otEditingId ? "Cambios guardados." : `Orden ${rec.folio} guardada.`);
   const keep = {tecnico:rec.tecnico, numTecnico:rec.numTecnico, ruta:rec.ruta, jefe:rec.jefe};
