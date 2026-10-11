@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mantenimiento · ADC Cancún</title>
+<meta name="theme-color" content="#1D4F9E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ADC Mtto">
+<script src="config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#E9EEF2; --paper:#FFFFFF; --ink:#18232E; --muted:#5B6873; --line:#C9D3DB;
+  --blue:#1D4F9E; --blue-soft:#DCE6F5; --ok:#2B7A4B; --ok-soft:#DCEFE3;
+  --warn:#A65F00; --warn-soft:#F7E8D2; --bad:#A8231B; --bad-soft:#F6DCDA;
+  --field:#F5F8FA;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161C; --paper:#18212A; --ink:#E6ECF1; --muted:#97A4AF; --line:#2C3843;
+    --blue:#7FA8E8; --blue-soft:#1E2E45; --ok:#6FC594; --ok-soft:#173326;
+    --warn:#E5A94F; --warn-soft:#3A2B14; --bad:#EE8078; --bad-soft:#3D1D1A; --field:#1F2933;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161C; --paper:#18212A; --ink:#E6ECF1; --muted:#97A4AF; --line:#2C3843;
+  --blue:#7FA8E8; --blue-soft:#1E2E45; --ok:#6FC594; --ok-soft:#173326;
+  --warn:#E5A94F; --warn-soft:#3A2B14; --bad:#EE8078; --bad-soft:#3D1D1A; --field:#1F2933;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:860px;margin:0 auto;padding:0 14px 90px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 8px;border-bottom:1px solid var(--line)}
+.brand{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.brand h1{margin:0;font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+.brand small{color:var(--muted);font-size:.8rem}
+nav.tabs{display:flex;gap:6px;margin-top:10px}
+nav.tabs button{flex:1;min-width:0;font-size:.88rem;border:1px solid var(--line);background:var(--paper);padding:9px 6px;border-radius:8px;font-weight:600;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+:root[data-theme="dark"] nav.tabs button[aria-selected="true"]{color:#0E1620}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav.tabs button[aria-selected="true"]{color:#0E1620}}
+
+section.panel{display:none;padding-top:14px}
+section.panel.on{display:block}
+
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.sheet > h2{margin:0;font-size:.95rem;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet > h2 .num{color:var(--blue);margin-right:6px}
+.sheet .body{padding:12px 14px}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+@media (min-width:640px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f label{font-size:.78rem;color:var(--muted);font-weight:600}
+input[type=text],input[type=date],input[type=month],input[type=number],select,textarea{
+  width:100%;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:9px 10px;min-height:40px}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--field);cursor:pointer;font-size:.9rem}
+.seg input{accent-color:var(--blue)}
+.seg label:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+
+/* checklist */
+.ck{width:100%;border-collapse:collapse}
+.ck th{font-size:.72rem;color:var(--muted);font-weight:600;text-align:center;padding:4px 2px 8px}
+.ck th:first-child{text-align:left}
+.ck td{padding:5px 2px;border-top:1px solid var(--line);vertical-align:middle}
+.ck td:first-child{font-size:.88rem;padding-right:8px}
+.ck td.n{width:62px}
+.ck input{width:58px;min-height:36px;text-align:center;padding:6px 2px;font-weight:600}
+.ck input.r:not(:placeholder-shown){border-color:var(--warn);background:var(--warn-soft)}
+.ck input.p:not(:placeholder-shown){border-color:var(--bad);background:var(--bad-soft)}
+.ck input.b:not(:placeholder-shown){border-color:var(--ok);background:var(--ok-soft)}
+
+.acts{display:grid;gap:6px}
+.acts label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);cursor:pointer;font-size:.88rem}
+.acts label b{color:var(--blue);min-width:20px;font-variant-numeric:tabular-nums}
+.acts input{margin-top:3px;accent-color:var(--blue)}
+.acts label:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+
+.svc{display:grid;gap:6px}
+.svc label{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);cursor:pointer}
+.svc small{color:var(--muted);font-size:.78rem}
+.svc .age{font-size:.75rem;color:var(--muted);white-space:nowrap}
+.svc label:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+.svc input{accent-color:var(--blue)}
+
+.agebox{font-size:.85rem;color:var(--muted);margin-bottom:10px}
+.agebox strong{color:var(--ink)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));z-index:6}
+.bar .in{max-width:860px;margin:0 auto;display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--paper);padding:11px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;flex:1}
+:root[data-theme="dark"] .btn.primary{color:#0E1620}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0E1620}}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{padding:6px 10px;font-size:.82rem;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+
+.status{font-size:.8rem;color:var(--muted);margin:8px 0 0}
+.status.err{color:var(--bad)}
+
+/* records */
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.filters .f.wide{grid-column:1/-1}
+.rec{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.rec .a{font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.rec .m{color:var(--muted);font-size:.82rem}
+.rec .tag{justify-self:end;font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue);white-space:nowrap}
+.rec .tag.ok{background:var(--ok-soft);color:var(--ok)}
+.rec .tag.bad{background:var(--bad-soft);color:var(--bad)}
+.rec .acts2{grid-column:1/-1;display:flex;gap:6px;margin-top:6px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+
+/* export */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+@media (min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px}
+.kpi b{display:block;font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.78rem;color:var(--muted)}
+.tbl-wrap{overflow-x:auto}
+table.sum{width:100%;border-collapse:collapse;font-size:.86rem}
+table.sum th,table.sum td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.sum td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+ .rq-row{display:grid;grid-template-columns:1fr 70px 70px 74px;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.rq-row.h{border-top:0;font-size:.72rem;color:var(--muted);font-weight:600;padding-top:0}
+.rq-row.h span:not(:first-child){text-align:center}
+.rq-name{font-size:.88rem;min-width:0}
+.rq-name small{display:block;color:var(--muted);font-size:.74rem;overflow-wrap:anywhere}
+.rq-name input{margin-top:4px;min-height:32px;padding:5px 8px;font-size:.8rem}
+.rq-n{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.rq-row input.ex{text-align:center;padding:6px 2px;min-height:36px;font-weight:600}
+.rq-out{text-align:center;font-weight:800;border-radius:7px;padding:7px 2px;font-variant-numeric:tabular-nums}
+.rq-out.need{background:var(--bad-soft);color:var(--bad)}
+.rq-out.okk{background:var(--ok-soft);color:var(--ok)}
+.brand-r{display:flex;align-items:center;gap:8px}
+#store-info.off{color:var(--warn)} #store-info.err{color:var(--bad)}
+.gate{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate[hidden]{display:none}
+.gate .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;max-width:360px;width:100%}
+.gate h2{margin:0 0 6px;font-size:1.2rem}
+.gate p{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.mods{display:flex;gap:0;margin-top:10px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--paper)}
+.mods button{flex:1;border:0;background:transparent;padding:8px 6px;font-weight:700;cursor:pointer;color:var(--muted)}
+.mods button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+nav.tabs button[hidden]{display:none}
+details.blk{border-top:1px solid var(--line)}
+details.blk:first-child{border-top:0}
+details.blk > summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;list-style:none}
+details.blk > summary::-webkit-details-marker{display:none}
+details.blk > summary::after{content:"▾";color:var(--muted)}
+details.blk[open] > summary::after{content:"▴"}
+details.blk .cnt{margin-left:auto;font-size:.75rem;font-weight:700;color:var(--blue);background:var(--blue-soft);border-radius:999px;padding:2px 8px}
+details.blk .cnt:empty{display:none}
+.chk{display:grid;gap:6px;padding-bottom:12px}
+.chk label{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);cursor:pointer;font-size:.88rem}
+.chk label:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+.chk input{accent-color:var(--blue)}
+.chk b{color:var(--blue);min-width:30px;font-variant-numeric:tabular-nums}
+.read{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;padding-bottom:12px}
+.mini{display:flex;gap:4px;flex-wrap:wrap}
+.mini label{border:1px solid var(--line);border-radius:6px;padding:5px 9px;font-size:.82rem;background:var(--field);cursor:pointer}
+.mini input{position:absolute;opacity:0;pointer-events:none}
+.mini label:has(input:checked){background:var(--blue);border-color:var(--blue);color:#fff}
+.parts .prow{display:grid;grid-template-columns:1fr 92px 64px 34px;gap:6px;margin-bottom:6px}
+.parts .prow button{border:1px solid var(--line);background:var(--field);border-radius:7px;cursor:pointer;color:var(--bad);font-weight:700}
+.times{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:8px}
+.times strong{color:var(--ink)}
+.ev img{max-width:100%;border-radius:8px;border:1px solid var(--line);margin-top:8px;display:block}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90vw}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1 id="appTitle">Hoja de diagnóstico</h1><span class="brand-r"><button class="btn small" id="btnInstall" type="button" hidden>Instalar app</button><small id="store-info">Conectando…</small></span></div>
+    <div class="mods" role="tablist" aria-label="Módulo">
+      <button type="button" aria-selected="true" data-mod="diag">Diagnóstico</button>
+      <button type="button" aria-selected="false" data-mod="ot">Órdenes de trabajo</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-mod="diag" data-tab="captura">Capturar</button>
+      <button role="tab" aria-selected="false" data-mod="diag" data-tab="registros">Registros</button>
+      <button role="tab" aria-selected="false" data-mod="diag" data-tab="requisicion">Requisición</button>
+      <button role="tab" aria-selected="false" data-mod="diag" data-tab="exportar">Exportar</button>
+      <button role="tab" aria-selected="false" data-mod="ot" data-tab="otCaptura" hidden>Capturar OT</button>
+      <button role="tab" aria-selected="false" data-mod="ot" data-tab="otRegistros" hidden>Registros</button>
+      <button role="tab" aria-selected="false" data-mod="ot" data-tab="otExportar" hidden>Exportar</button>
+    </nav>
+  </header>
+
+  <!-- CAPTURA -->
+  <section class="panel on" id="captura">
+    <form id="frm" autocomplete="off" onsubmit="return false">
+      <div class="sheet">
+        <h2><span>Datos del equipo</span><span id="edit-flag" class="m"></span></h2>
+        <div class="body grid">
+          <div class="f"><label for="activo">No. activo *</label><input type="text" id="activo" inputmode="numeric" required></div>
+          <div class="f"><label for="fechaDiag">Fecha diagnóstico *</label><input type="date" id="fechaDiag" required></div>
+          <div class="f"><label for="folio">Folio</label><input type="text" id="folio"></div>
+          <div class="f"><label for="modelo">Modelo</label><input type="text" id="modelo" list="dl-modelo"></div>
+          <div class="f"><label for="serie">No. serie</label><input type="text" id="serie"></div>
+          <div class="f"><label for="marca">Marca</label><input type="text" id="marca" list="dl-marca"></div>
+          <div class="f"><label for="cedis">CEDIS origen</label><input type="text" id="cedis" list="dl-cedis"></div>
+          <div class="f"><label for="puertas">No. puertas</label><input type="number" id="puertas" min="0" inputmode="numeric"></div>
+          <div class="f"><label for="fabricacion">Fecha fabricación</label><input type="month" id="fabricacion"></div>
+          <div class="f wide"><label>Tipo de equipo</label>
+            <div class="seg">
+              <label><input type="radio" name="tipo" value="Vertical">Vertical</label>
+              <label><input type="radio" name="tipo" value="Horizontal">Horizontal</label>
+              <label><input type="radio" name="tipo" value="Pass Through">Pass Through</label>
+              <label><input type="radio" name="tipo" value="Otro">Otro</label>
+            </div>
+          </div>
+          <div class="f wide" id="tipoOtroBox" hidden><label for="tipoOtro">Especifique</label><input type="text" id="tipoOtro"></div>
+        </div>
+      </div>
+
+      <div id="checklist"></div>
+
+      <div class="sheet">
+        <h2>Estado final</h2>
+        <div class="body seg">
+          <label><input type="checkbox" id="listo">Listo para el mercado</label>
+          <label><input type="checkbox" id="lavado">Solo requiere lavado</label>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>Actividades requeridas</h2>
+        <div class="body acts" id="actividades"></div>
+      </div>
+
+      <div class="sheet">
+        <h2>Servicio</h2>
+        <div class="body">
+          <div class="agebox" id="agebox">Antigüedad: captura la fecha de fabricación.</div>
+          <div class="svc" id="servicios"></div>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>Cierre</h2>
+        <div class="body grid">
+          <div class="f wide"><label for="diagnosticador">Nombre del diagnosticador</label><input type="text" id="diagnosticador" list="dl-diag"></div>
+          <div class="f wide"><label for="obs">Observaciones</label><textarea id="obs"></textarea></div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- REGISTROS -->
+  <section class="panel" id="registros">
+    <div class="filters">
+      <div class="f wide"><label for="q">Buscar activo, serie, modelo o folio</label><input type="text" id="q"></div>
+      <div class="f"><label for="rDesde">Desde</label><input type="date" id="rDesde"></div>
+      <div class="f"><label for="rHasta">Hasta</label><input type="date" id="rHasta"></div>
+    </div>
+    <div id="lista"></div>
+  </section>
+
+  <!-- REQUISICION -->
+  <section class="panel" id="requisicion">
+    <div class="sheet">
+      <h2>Cruce con almacén</h2>
+      <div class="body">
+        <div class="filters">
+          <div class="f"><label for="qDesde">Diagnósticos desde</label><input type="date" id="qDesde"></div>
+          <div class="f"><label for="qHasta">Hasta</label><input type="date" id="qHasta"></div>
+        </div>
+        <div class="seg" style="margin-bottom:10px">
+          <button class="btn small" type="button" data-qrange="hoy">Hoy</button>
+          <button class="btn small" type="button" data-qrange="semana">Últimos 7 días</button>
+          <button class="btn small" type="button" data-qrange="mes">Este mes</button>
+          <label><input type="checkbox" id="qExcl" checked>Excluir chatarra y obsoletos</label>
+        </div>
+        <div class="kpis" id="qKpis"></div>
+        <p class="status">Captura la existencia en almacén de cada componente; se guarda para los siguientes días. Requisitar = Requiere − Existencia.</p>
+        <div id="qTabla"></div>
+        <button class="btn primary" type="button" id="btnReq" style="width:100%;margin-top:12px">Descargar requisición en Excel</button>
+        <p class="status" id="reqStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPORTAR -->
+  <section class="panel" id="exportar">
+    <div class="sheet">
+      <h2>Reporte a Excel</h2>
+      <div class="body">
+        <div class="filters">
+          <div class="f"><label for="eDesde">Desde</label><input type="date" id="eDesde"></div>
+          <div class="f"><label for="eHasta">Hasta</label><input type="date" id="eHasta"></div>
+          <div class="f wide"><label for="eActivos">Solo estos activos (opcional, separados por coma o renglón)</label><textarea id="eActivos" placeholder="Vacío = todos"></textarea></div>
+        </div>
+        <div class="seg" style="margin-bottom:6px">
+          <button class="btn small" type="button" data-range="hoy">Hoy</button>
+          <button class="btn small" type="button" data-range="semana">Últimos 7 días</button>
+          <button class="btn small" type="button" data-range="mes">Este mes</button>
+          <button class="btn small" type="button" data-range="todo">Todo</button>
+        </div>
+        <div class="kpis" id="kpis"></div>
+        <div class="tbl-wrap" id="resumen"></div>
+        <p class="status">El archivo incluye cuatro hojas: Diagnósticos (un renglón por equipo), Resumen por servicio y actividad, Refacciones (totales de "Requiere" y "Repara" por componente) y Checklist detallado.</p>
+        <button class="btn primary" type="button" id="btnExport" style="width:100%;margin-top:10px">Descargar Excel</button>
+        <p class="status" id="expStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- OT CAPTURA -->
+  <section class="panel" id="otCaptura">
+    <form id="otFrm" autocomplete="off" onsubmit="return false">
+      <div class="sheet">
+        <h2><span>Datos de la orden</span><span id="ot-edit-flag" class="m"></span></h2>
+        <div class="body grid">
+          <div class="f"><label for="ot_folio">No. de orden *</label><input type="text" id="ot_folio" inputmode="numeric"></div>
+          <div class="f"><label for="ot_activo">Activo # *</label><input type="text" id="ot_activo" inputmode="numeric"></div>
+          <div class="f"><label for="ot_serie">Serie #</label><input type="text" id="ot_serie"></div>
+          <div class="f wide"><label>Tipo de orden</label>
+            <div class="seg" id="ot_tipo"></div>
+          </div>
+          <div class="f"><label for="ot_tecnico">Nombre del técnico</label><input type="text" id="ot_tecnico" list="dl-ot-tec"></div>
+          <div class="f"><label for="ot_numTecnico"># Técnico</label><input type="text" id="ot_numTecnico"></div>
+          <div class="f"><label for="ot_ruta"># Ruta</label><input type="text" id="ot_ruta"></div>
+          <div class="f wide"><label for="ot_establecimiento">Nombre del establecimiento</label><input type="text" id="ot_establecimiento"></div>
+          <div class="f"><label for="ot_cliente"># Cliente</label><input type="text" id="ot_cliente" inputmode="numeric"></div>
+          <div class="f wide"><label for="ot_direccion">Dirección</label><input type="text" id="ot_direccion"></div>
+          <div class="f"><label for="ot_tipoEquipo">Tipo de equipo</label><input type="text" id="ot_tipoEquipo" list="dl-ot-teq"></div>
+          <div class="f"><label for="ot_modelo">Modelo</label><input type="text" id="ot_modelo"></div>
+          <div class="f"><label for="ot_proveedor">Proveedor</label><input type="text" id="ot_proveedor" list="dl-ot-prov"></div>
+          <div class="f"><label for="ot_jefe">Jefe de refrigeración</label><input type="text" id="ot_jefe" list="dl-ot-jefe"></div>
+          <div class="f wide"><label>Resultado</label>
+            <div class="seg"><label><input type="radio" name="ot_resultado" value="Completo">Completo</label><label><input type="radio" name="ot_resultado" value="Incompleto">Incompleto</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>Tiempos</h2>
+        <div class="body grid">
+          <div class="f"><label for="ot_fLlamada">Fecha y hora de llamada</label><input type="datetime-local" id="ot_fLlamada"></div>
+          <div class="f"><label for="ot_fArribo">Fecha y hora de arribo</label><input type="datetime-local" id="ot_fArribo"></div>
+          <div class="f"><label for="ot_fTermino">Fecha y hora de término</label><input type="datetime-local" id="ot_fTermino"></div>
+          <div class="f wide"><div class="times" id="ot_times"></div></div>
+          <div class="f wide"><label for="ot_descLlamada">Descripción de la llamada</label><textarea id="ot_descLlamada"></textarea></div>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>MP y procedimiento de llamadas de reparación</h2>
+        <div class="body" id="ot_proc"></div>
+      </div>
+
+      <div class="sheet">
+        <h2>Partes utilizadas</h2>
+        <div class="body parts">
+          <div class="prow" style="font-size:.72rem;color:var(--muted);font-weight:600"><span>Descripción de parte</span><span>Parte #</span><span>Cant.</span><span></span></div>
+          <div id="ot_partes"></div>
+          <button class="btn small" type="button" id="ot_addParte">+ Agregar parte</button>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>Descripción del trabajo</h2>
+        <div class="body"><textarea id="ot_descTrabajo" aria-label="Descripción del trabajo"></textarea></div>
+      </div>
+
+      <div class="sheet">
+        <h2>Código de razones</h2>
+        <div class="body" id="ot_razones"></div>
+      </div>
+
+      <div class="sheet">
+        <h2>Evidencia</h2>
+        <div class="body ev">
+          <p class="status" style="margin-top:0">Foto del formato firmado. Se reduce automáticamente antes de subirla.</p>
+          <input type="file" id="ot_foto" accept="image/*" capture="environment">
+          <div id="ot_fotoPrev"></div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- OT REGISTROS -->
+  <section class="panel" id="otRegistros">
+    <div class="filters">
+      <div class="f wide"><label for="otq">Buscar OT, activo, cliente o establecimiento</label><input type="text" id="otq"></div>
+      <div class="f"><label for="otDesde">Desde</label><input type="date" id="otDesde"></div>
+      <div class="f"><label for="otHasta">Hasta</label><input type="date" id="otHasta"></div>
+    </div>
+    <div id="otLista"></div>
+  </section>
+
+  <!-- OT EXPORTAR -->
+  <section class="panel" id="otExportar">
+    <div class="sheet">
+      <h2>Base de órdenes de trabajo a Excel</h2>
+      <div class="body">
+        <div class="filters">
+          <div class="f"><label for="oteDesde">Desde</label><input type="date" id="oteDesde"></div>
+          <div class="f"><label for="oteHasta">Hasta</label><input type="date" id="oteHasta"></div>
+        </div>
+        <div class="seg" style="margin-bottom:6px">
+          <button class="btn small" type="button" data-otrange="mes">Este mes</button>
+          <button class="btn small" type="button" data-otrange="mesant">Mes anterior</button>
+          <button class="btn small" type="button" data-otrange="todo">Todo</button>
+        </div>
+        <div class="kpis" id="otKpis"></div>
+        <p class="status">Hojas: Órdenes (una fila por OT), Partes, Códigos de razones y Checklist MP.</p>
+        <button class="btn primary" type="button" id="otBtnExport" style="width:100%;margin-top:10px">Descargar Excel</button>
+        <p class="status" id="otExpStatus"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="bar" id="barOT" style="display:none">
+  <div class="in">
+    <button class="btn" type="button" id="otBtnClear">Limpiar</button>
+    <button class="btn primary" type="button" id="otBtnSave">Guardar orden</button>
+  </div>
+</div>
+
+<div class="bar" id="bar">
+  <div class="in">
+    <button class="btn" type="button" id="btnClear">Limpiar</button>
+    <button class="btn primary" type="button" id="btnSave">Guardar diagnóstico</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="gate" id="gate" hidden>
+  <div class="card">
+    <h2>Clave de acceso</h2>
+    <p>Escribe la clave del equipo. Solo se pide la primera vez en este celular.</p>
+    <input type="password" id="gateKey" autocomplete="off" aria-label="Clave de acceso">
+    <button class="btn primary" type="button" id="gateBtn" style="width:100%;margin-top:12px">Entrar</button>
+    <p class="status err" id="gateMsg"></p>
+  </div>
+</div>
+
+<datalist id="dl-modelo"></datalist><datalist id="dl-marca"></datalist>
+<datalist id="dl-cedis"></datalist><datalist id="dl-diag"></datalist>
+<datalist id="dl-ot-tec"></datalist><datalist id="dl-ot-teq"></datalist><datalist id="dl-ot-prov"></datalist><datalist id="dl-ot-jefe"></datalist>
+
+<script>
+/* ---------- Catálogos del formato ---------- */
+const SECCIONES = [
+  {id:"gab", nombre:"Condiciones gabinete", cols:["b","r","p"], items:[
+    "Gabinete exterior","Gabinete interior","Charola/tolva difusor","Postes verticales","Moldura breaker"]},
+  {id:"img", nombre:"Condiciones de imagen y accesorios", cols:["b","r","p"], items:[
+    "Calcomanías laterales","Mica / cambio de puerta","Copete","Ventila-louver","Parrillas","Cremalleras","Clips","Mangueras/desagüe"]},
+  {id:"pta", nombre:"Condiciones de puerta(s)", cols:["b","r","p"], items:[
+    "Puerta","Marco de puerta","Sello magnético/whipper","Jaladera","Buje y/o tope","Bisagras","Insulado (sándwich de vidrio)","Hoja corrediza","Resorte/carretilla"]},
+  {id:"ele", nombre:"Condiciones sistema eléctrico", cols:["b","r"], items:[
+    "Lámpara(s)/LED's","Balastro/fuente de poder","Cable tomacorriente","Elementos compresor","Arnés eléctrico","Timer/motoprotector","Micromotor condensador","Micromotor evaporador","Control temperatura mecánico","Control electr./inteligente"]},
+  {id:"ref", nombre:"Condiciones sistema refrigeración", cols:["b","r"], items:[
+    "Compresor","Condensador","Evaporador","Intercambiador/capilar","Sistema tapado (barrido)","Sistema abierto/fugas (carga de gas)"]}
+];
+const COLNAME = {b:"Buen estado", r:"Requiere", p:"Repara"};
+const ACTIVIDADES = [
+  "Cambio balastro, lámpara, arnés eléctrico",
+  "Cambio imagen",
+  "Cambio sello magnético, jaladera, buje, marco",
+  "Cambio o reparación parrillas",
+  "Cambio o reparación de copete, ventila louver",
+  "Cambio de micromotor, tomacorriente, elementos eléctricos",
+  "Cambio o reparación de charola difusor",
+  "Fuga/barrido sistema/carga de gas",
+  "Cambio compresor",
+  "Cambio condensador, evaporador o intercambiador de calor",
+  "Cambio de puerta",
+  "Hojalatería y pintura",
+  "Hojalatería y pintura + cambio de compresor",
+  "Hojalatería y pintura + cambio de condensador/evaporador/int.",
+  "Hojalatería y pintura + cambio de puerta y/o marco",
+  "Gabinete abombado, colapsado, descuadrado, unicel o infestado",
+  "Cambio compresor + condensador/evaporador/int. + puerta",
+  "Cambio compresor + condensador/evaporador + parrillas",
+  "Cambio compresor + cambio puerta + cambio parrillas",
+  "Cambio compresor, condensador, evaporador o puerta"
+];
+const SERVICIOS = [
+  {v:"Reparación A", d:"Sin apertura de sistema de refrigeración", age:"≤ 5 años"},
+  {v:"Reparación B", d:"Con apertura de sistema", age:"≤ 5 años"},
+  {v:"Cambio de puerta", d:"", age:"≤ 5 años"},
+  {v:"Repotenciación", d:"Hojalatear, pintar y actualización tecnológica", age:"≥ 5 y ≤ 10 años"},
+  {v:"Chatarra", d:"Irreparable / costo alto de reparación o repotenciación", age:"≥ 5 y ≤ 10 años"},
+  {v:"Equipo obsoleto", d:"", age:"≥ 10 años"}
+];
+
+/* ---------- Construcción del formulario ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const key = (sec,i) => sec.id + "_" + i;
+
+$("#checklist").innerHTML = SECCIONES.map((s,si) => `
+  <div class="sheet">
+    <h2><span><span class="num">${si+1}.</span>${s.nombre}</span></h2>
+    <div class="body"><table class="ck">
+      <thead><tr><th></th>${s.cols.map(c=>`<th>${COLNAME[c]}</th>`).join("")}</tr></thead>
+      <tbody>${s.items.map((it,i)=>`<tr><td>${it}</td>${s.cols.map(c=>
+        `<td class="n"><input type="number" min="0" inputmode="numeric" placeholder=" " class="${c}" data-k="${key(s,i)}" data-c="${c}" aria-label="${esc(it)} – ${COLNAME[c]}"></td>`).join("")}</tr>`).join("")}
+      </tbody></table></div>
+  </div>`).join("");
+
+$("#actividades").innerHTML = ACTIVIDADES.map((a,i)=>
+  `<label><input type="checkbox" value="${i+1}" name="act"><b>${i+1}</b><span>${a}</span></label>`).join("");
+
+$("#servicios").innerHTML = SERVICIOS.map(s=>
+  `<label><input type="radio" name="servicio" value="${s.v}"><span><strong>${s.v}</strong>${s.d?`<br><small>${s.d}</small>`:""}</span><span class="age">${s.age}</span></label>`).join("");
+
+$$('input[name="tipo"]').forEach(r=>r.addEventListener("change",()=>{
+  $("#tipoOtroBox").hidden = !( $('input[name="tipo"]:checked')?.value === "Otro");
+}));
+
+function antiguedad(fab, diag){
+  if(!fab || !diag) return null;
+  const [fy,fm] = fab.split("-").map(Number);
+  const [dy,dm] = diag.split("-").map(Number);
+  const meses = (dy-fy)*12 + (dm-fm);
+  return meses < 0 ? null : Math.round(meses/12*10)/10;
+}
+function updAge(){
+  const a = antiguedad($("#fabricacion").value, $("#fechaDiag").value);
+  $("#agebox").innerHTML = a===null ? "Antigüedad: captura la fecha de fabricación." : `Antigüedad: <strong>${a} años</strong>`;
+}
+$("#fabricacion").addEventListener("change",updAge);
+$("#fechaDiag").addEventListener("change",updAge);
+
+/* ---------- Almacenamiento: Google Sheets vía Apps Script, con cola sin conexión ---------- */
+const CFG = window.APP_CONFIG || {};
+const K_OTS="hd-ordenes-v1"; const K_REC="hd-registros-v1", K_OUT="hd-pendientes-v1", K_ST="hd-existencias-v1", K_TOK="hd-clave-v1";
+const jget = (k,d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+const jset = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+let ots = jget(K_OTS, []);
+let records = jget(K_REC, []), outbox = jget(K_OUT, []), stock = jget(K_ST, {});
+let editingId = null, token = jget(K_TOK, ""), syncing = false;
+const apiReady = () => CFG.API_URL && /^https:\/\/script\.google\.com\//.test(CFG.API_URL);
+
+function persist(){ jset(K_OTS, ots); jset(K_REC, records); jset(K_OUT, outbox); jset(K_ST, stock); }
+function setStatus(){
+  const el = $("#store-info");
+  if(!apiReady()){ el.textContent = "Falta configurar la conexión"; el.className = "err"; return; }
+  if(!navigator.onLine){ el.textContent = `Sin conexión${outbox.length?` · ${outbox.length} pendiente(s)`:""}`; el.className = "off"; return; }
+  if(outbox.length){ el.textContent = `Sincronizando ${outbox.length}…`; el.className = "off"; return; }
+  el.textContent = "Sincronizado"; el.className = "";
+}
+async function api(payload){
+  const r = await fetch(CFG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({...payload, token})});
+  const j = await r.json();
+  if(!j.ok){ const e = new Error(j.error||"error"); e.code = j.code||"server"; throw e; }
+  return j;
+}
+function applyOp(op){
+  if(op.action==="save"){ const i = records.findIndex(r=>r.id===op.record.id); if(i>=0) records[i]=op.record; else records.push(op.record); }
+  if(op.action==="delete"){ records = records.filter(r=>r.id!==op.id); }
+  if(op.action==="saveOT"){ const i = ots.findIndex(r=>r.id===op.record.id); if(i>=0) ots[i]=op.record; else ots.push(op.record); }
+  if(op.action==="deleteOT"){ ots = ots.filter(r=>r.id!==op.id); }
+  if(op.action==="stock"){ stock[op.key] = {...(stock[op.key]||{}), ex:op.ex, cod:op.cod}; }
+}
+async function flush(){
+  if(!apiReady() || !token || !navigator.onLine) return;
+  while(outbox.length){
+    try{
+      const op = outbox[0], res = await api(op); outbox.shift();
+      if(op.action==="saveOT" && res.evidencia){
+        const r = ots.find(x=>x.id===op.record.id);
+        if(r){ r.evidencia = res.evidencia; delete r.foto; }
+      }
+      persist(); setStatus();
+    }
+    catch(e){ if(e.code==="auth") askKey("La clave cambió. Escríbela de nuevo."); break; }
+  }
+}
+async function sync(){
+  if(syncing || !apiReady() || !token) { setStatus(); return; }
+  syncing = true;
+  try{
+    await flush();
+    if(navigator.onLine){
+      const j = await api({action:"list"});
+      records = j.records || []; stock = j.stock || {}; ots = j.ots || [];
+      outbox.forEach(applyOp);           // lo pendiente gana sobre lo del servidor
+      persist();
+      if(!document.activeElement?.closest("#qTabla")) renderAll(); else fillDatalists();
+    }
+  }catch(e){
+    if(e.code==="auth") askKey("Clave incorrecta.");
+  }finally{ syncing = false; setStatus(); }
+}
+function queue(op){
+  if(op.action==="stock") outbox = outbox.filter(o=>!(o.action==="stock" && o.key===op.key));
+  outbox.push(op); applyOp(op); persist(); setStatus(); flush().then(setStatus);
+}
+async function saveRecord(rec){ queue({action:"save", record:rec}); renderAll(); }
+async function deleteRecord(id){ queue({action:"delete", id}); renderAll(); }
+
+function askKey(msg){
+  $("#gate").hidden = false; $("#gateMsg").textContent = msg||""; $("#gateKey").value = ""; setTimeout(()=>$("#gateKey").focus(),50);
+}
+$("#gateBtn").addEventListener("click", async ()=>{
+  const k = $("#gateKey").value.trim(); if(!k) return;
+  $("#gateMsg").textContent = "Verificando…"; token = k;
+  try{ await api({action:"ping"}); jset(K_TOK, token); $("#gate").hidden = true; sync(); }
+  catch(e){ token = ""; $("#gateMsg").textContent = e.code==="auth" ? "Clave incorrecta." : "Sin conexión. Intenta de nuevo con internet."; }
+});
+$("#gateKey").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#gateBtn").click(); });
+
+window.addEventListener("online", sync);
+window.addEventListener("offline", setStatus);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") sync(); });
+setInterval(()=>{ if(document.visibilityState==="visible") sync(); }, 60000);
+
+/* Instalar como app */
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installEvt = e; $("#btnInstall").hidden = false; });
+$("#btnInstall").addEventListener("click", async ()=>{ if(!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("#btnInstall").hidden = true; });
+if("serviceWorker" in navigator){ window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+
+/* ---------- Leer / llenar formulario ---------- */
+function readForm(){
+  const ck = {};
+  $$("#checklist input").forEach(inp=>{
+    if(inp.value!==""){ (ck[inp.dataset.k] ||= {})[inp.dataset.c] = Number(inp.value); }
+  });
+  const tipo = $('input[name="tipo"]:checked')?.value || "";
+  return {
+    activo:$("#activo").value.trim(), fechaDiag:$("#fechaDiag").value, folio:$("#folio").value.trim(),
+    modelo:$("#modelo").value.trim(), serie:$("#serie").value.trim(), marca:$("#marca").value.trim(),
+    cedis:$("#cedis").value.trim(), puertas:$("#puertas").value===""?null:Number($("#puertas").value),
+    fabricacion:$("#fabricacion").value, tipo, tipoOtro: tipo==="Otro" ? $("#tipoOtro").value.trim() : "",
+    checklist:ck, listo:$("#listo").checked, lavado:$("#lavado").checked,
+    actividades:$$('input[name="act"]:checked').map(c=>Number(c.value)),
+    servicio:$('input[name="servicio"]:checked')?.value || "",
+    diagnosticador:$("#diagnosticador").value.trim(), obs:$("#obs").value.trim()
+  };
+}
+function fillForm(r){
+  clearForm(false);
+  ["activo","fechaDiag","folio","modelo","serie","marca","cedis","fabricacion","tipoOtro","diagnosticador"].forEach(k=>$("#"+k).value = r[k] ?? "");
+  $("#obs").value = r.obs || "";
+  $("#puertas").value = r.puertas ?? "";
+  $$('input[name="tipo"]').forEach(x=>x.checked = x.value===r.tipo);
+  $("#tipoOtroBox").hidden = r.tipo!=="Otro";
+  $$("#checklist input").forEach(inp=>{ const v = r.checklist?.[inp.dataset.k]?.[inp.dataset.c]; inp.value = v ?? ""; });
+  $("#listo").checked = !!r.listo; $("#lavado").checked = !!r.lavado;
+  $$('input[name="act"]').forEach(c=>c.checked = (r.actividades||[]).includes(Number(c.value)));
+  $$('input[name="servicio"]').forEach(x=>x.checked = x.value===r.servicio);
+  editingId = r.id;
+  $("#edit-flag").textContent = "Editando";
+  $("#btnSave").textContent = "Guardar cambios";
+  updAge();
+}
+function clearForm(resetEdit=true){
+  $("#frm").reset();
+  $("#fechaDiag").value = today();
+  $("#tipoOtroBox").hidden = true;
+  if(resetEdit){ editingId=null; $("#edit-flag").textContent=""; $("#btnSave").textContent="Guardar diagnóstico"; }
+  updAge();
+}
+function today(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+clearForm();
+
+$("#btnClear").addEventListener("click",()=>{ clearForm(); window.scrollTo(0,0); });
+$("#btnSave").addEventListener("click", async ()=>{
+  const data = readForm();
+  if(!data.activo){ toast("Captura el número de activo."); $("#activo").focus(); return; }
+  if(!data.fechaDiag){ toast("Captura la fecha de diagnóstico."); $("#fechaDiag").focus(); return; }
+  const dup = records.find(r=>r.activo===data.activo && r.fechaDiag===data.fechaDiag && r.id!==editingId);
+  if(dup && !confirm(`El activo ${data.activo} ya tiene un diagnóstico el ${data.fechaDiag}. ¿Guardar otro?`)) return;
+  const now = new Date().toISOString();
+  const prev = records.find(r=>r.id===editingId);
+  const rec = {...data, id: editingId || ("d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+    creado: prev?.creado || now, actualizado: now};
+  const btn = $("#btnSave"); btn.disabled = true;
+  try{
+    await saveRecord(rec);
+    toast(editingId ? "Cambios guardados." : `Diagnóstico del activo ${rec.activo} guardado.`);
+    // conservar datos repetitivos para el siguiente equipo
+    const keep = {cedis:rec.cedis, diagnosticador:rec.diagnosticador, fechaDiag:rec.fechaDiag};
+    clearForm();
+    Object.entries(keep).forEach(([k,v])=>$("#"+k).value=v);
+    window.scrollTo(0,0); $("#activo").focus();
+  }catch(e){
+    toast("No se guardó: " + (e?.code || e?.message || "error") + ". Intenta de nuevo.");
+  }finally{ btn.disabled = false; }
+});
+
+/* ---------- Registros ---------- */
+function filtered(desde, hasta, q, activos){
+  return records.filter(r=>{
+    if(desde && r.fechaDiag < desde) return false;
+    if(hasta && r.fechaDiag > hasta) return false;
+    if(activos && activos.length && !activos.includes(r.activo)) return false;
+    if(q){ const t = [r.activo,r.serie,r.modelo,r.folio].join(" ").toLowerCase(); if(!t.includes(q)) return false; }
+    return true;
+  }).sort((a,b)=> (b.fechaDiag||"").localeCompare(a.fechaDiag||"") || (b.creado||"").localeCompare(a.creado||""));
+}
+function tagClass(s){ return s==="Reparación A"||s==="Cambio de puerta" ? "ok" : (s==="Chatarra"||s==="Equipo obsoleto") ? "bad" : ""; }
+function renderList(){
+  const list = filtered($("#rDesde").value, $("#rHasta").value, $("#q").value.trim().toLowerCase());
+  if(!records.length){ $("#lista").innerHTML = `<div class="empty">Aún no hay diagnósticos. Captura el primero en la pestaña Capturar.</div>`; return; }
+  if(!list.length){ $("#lista").innerHTML = `<div class="empty">Ningún registro coincide con la búsqueda.</div>`; return; }
+  $("#lista").innerHTML = list.map(r=>`
+    <div class="rec">
+      <div class="a">${esc(r.activo)}</div>
+      <div class="tag ${tagClass(r.servicio)}">${esc(r.servicio || (r.listo?"Listo":"Sin servicio"))}</div>
+      <div class="m">${esc(r.fechaDiag)} · ${esc(r.modelo||"—")} · Serie ${esc(r.serie||"—")}</div>
+      <div class="m" style="justify-self:end">${(r.actividades||[]).length ? "Act. "+r.actividades.join(", ") : ""}</div>
+      <div class="acts2"><button class="btn small" data-edit="${r.id}">Editar</button><button class="btn small danger" data-del="${r.id}">Eliminar</button></div>
+    </div>`).join("");
+}
+$("#lista").addEventListener("click", async e=>{
+  const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+  if(ed){ const r = records.find(x=>x.id===ed.dataset.edit); if(r){ fillForm(r); showTab("captura"); window.scrollTo(0,0);} }
+  if(del){
+    const r = records.find(x=>x.id===del.dataset.del);
+    if(r && confirm(`¿Eliminar el diagnóstico del activo ${r.activo} (${r.fechaDiag})?`)){
+      try{ await deleteRecord(r.id); toast("Diagnóstico eliminado."); }catch(err){ toast("No se eliminó: "+(err?.code||"error")); }
+    }
+  }
+});
+["#q","#rDesde","#rHasta"].forEach(s=>$(s).addEventListener("input",renderList));
+
+/* ---------- Exportar ---------- */
+function exportSet(){
+  const acts = $("#eActivos").value.split(/[\s,;]+/).map(s=>s.trim()).filter(Boolean);
+  return filtered($("#eDesde").value, $("#eHasta").value, "", acts);
+}
+function countBy(list, fn){ const m = new Map(); list.forEach(r=>[].concat(fn(r)).forEach(k=>{ if(k!==undefined&&k!=="") m.set(k,(m.get(k)||0)+1); })); return m; }
+function refacciones(list){
+  const rows = [];
+  SECCIONES.forEach(s=>s.items.forEach((it,i)=>{
+    let req=0, rep=0, eq=0;
+    list.forEach(r=>{ const c=r.checklist?.[key(s,i)]; if(c){ req+=c.r||0; rep+=c.p||0; if((c.r||0)+(c.p||0)>0) eq++; } });
+    if(req||rep) rows.push({Sección:s.nombre, Componente:it, Requiere:req, Repara:rep, "Equipos afectados":eq});
+  }));
+  return rows;
+}
+function renderExport(){
+  const list = exportSet();
+  const svc = countBy(list, r=>r.servicio||"Sin servicio");
+  $("#kpis").innerHTML = `
+    <div class="kpi"><b>${list.length}</b><span>Equipos diagnosticados</span></div>
+    <div class="kpi"><b>${list.filter(r=>r.listo).length}</b><span>Listos para el mercado</span></div>
+    <div class="kpi"><b>${list.filter(r=>r.lavado).length}</b><span>Solo lavado</span></div>
+    <div class="kpi"><b>${(svc.get("Chatarra")||0)+(svc.get("Equipo obsoleto")||0)}</b><span>Chatarra u obsoletos</span></div>`;
+  const ref = refacciones(list).sort((a,b)=>(b.Requiere+b.Repara)-(a.Requiere+a.Repara)).slice(0,8);
+  $("#resumen").innerHTML = !list.length ? `<div class="empty">No hay registros en el periodo seleccionado.</div>` : `
+    <table class="sum"><thead><tr><th>Servicio</th><th style="text-align:right">Equipos</th></tr></thead><tbody>
+    ${[...svc].map(([k,v])=>`<tr><td>${esc(k)}</td><td class="v">${v}</td></tr>`).join("")}</tbody></table>
+    ${ref.length?`<table class="sum" style="margin-top:12px"><thead><tr><th>Componente más requerido</th><th style="text-align:right">Requiere</th><th style="text-align:right">Repara</th></tr></thead><tbody>
+    ${ref.map(x=>`<tr><td>${esc(x.Componente)}</td><td class="v">${x.Requiere}</td><td class="v">${x.Repara}</td></tr>`).join("")}</tbody></table>`:""}`;
+  $("#btnExport").disabled = !list.length;
+}
+["#eDesde","#eHasta","#eActivos"].forEach(s=>$(s).addEventListener("input",renderExport));
+$$("[data-range]").forEach(b=>b.addEventListener("click",()=>{
+  const t = today(), d = new Date(t+"T12:00:00");
+  const fmt = x => x.toISOString().slice(0,10);
+  if(b.dataset.range==="hoy"){ $("#eDesde").value=t; $("#eHasta").value=t; }
+  if(b.dataset.range==="semana"){ const x=new Date(d); x.setDate(x.getDate()-6); $("#eDesde").value=fmt(x); $("#eHasta").value=t; }
+  if(b.dataset.range==="mes"){ $("#eDesde").value=t.slice(0,8)+"01"; $("#eHasta").value=t; }
+  if(b.dataset.range==="todo"){ $("#eDesde").value=""; $("#eHasta").value=""; }
+  renderExport();
+}));
+
+function buildWorkbook(list){
+  const wb = XLSX.utils.book_new();
+  // Hoja 1: un renglón por equipo
+  const diag = list.map(r=>{
+    const row = {
+      "Fecha diagnóstico":r.fechaDiag, "Folio":r.folio, "No. activo":r.activo, "No. serie":r.serie, "Modelo":r.modelo,
+      "Marca":r.marca, "CEDIS origen":r.cedis, "Tipo equipo": r.tipo==="Otro" ? `Otro: ${r.tipoOtro}` : r.tipo,
+      "No. puertas":r.puertas, "Fecha fabricación":r.fabricacion, "Antigüedad (años)":antiguedad(r.fabricacion,r.fechaDiag),
+      "Servicio":r.servicio, "Listo para mercado":r.listo?"Sí":"No", "Solo lavado":r.lavado?"Sí":"No",
+      "Actividades (núm.)":(r.actividades||[]).join(", "),
+      "Actividades (descripción)":(r.actividades||[]).map(n=>`${n}. ${ACTIVIDADES[n-1]}`).join(" | ")
+    };
+    const req=[], rep=[];
+    SECCIONES.forEach(s=>s.items.forEach((it,i)=>{ const c=r.checklist?.[key(s,i)]; if(c?.r) req.push(`${it} (${c.r})`); if(c?.p) rep.push(`${it} (${c.p})`); }));
+    row["Componentes que requiere"] = req.join(", ");
+    row["Componentes a reparar"] = rep.join(", ");
+    row["Diagnosticador"] = r.diagnosticador; row["Observaciones"] = r.obs;
+    return row;
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diag), "Diagnósticos");
+
+  // Hoja 2: resumen
+  const aoa = [["Resumen", `${$("#eDesde").value||"inicio"} a ${$("#eHasta").value||"hoy"}`],[],["Equipos diagnosticados", list.length],
+    ["Listos para el mercado", list.filter(r=>r.listo).length],["Solo requieren lavado", list.filter(r=>r.lavado).length],[],["Servicio","Equipos"]];
+  countBy(list, r=>r.servicio||"Sin servicio").forEach((v,k)=>aoa.push([k,v]));
+  aoa.push([],["Actividad","Equipos"]);
+  const ac = countBy(list, r=>r.actividades||[]);
+  [...ac].sort((a,b)=>a[0]-b[0]).forEach(([k,v])=>aoa.push([`${k}. ${ACTIVIDADES[k-1]}`,v]));
+  aoa.push([],["Modelo","Equipos"]);
+  countBy(list, r=>r.modelo||"Sin modelo").forEach((v,k)=>aoa.push([k,v]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Resumen");
+
+  // Hoja 3: refacciones
+  const ref = refacciones(list);
+  XLSX.utils.book_append_sheet(wb, ref.length ? XLSX.utils.json_to_sheet(ref) : XLSX.utils.aoa_to_sheet([["Sin componentes requeridos en el periodo"]]), "Refacciones");
+
+  // Hoja 4: checklist completo (una columna por componente y condición)
+  const det = list.map(r=>{
+    const row = {"Fecha":r.fechaDiag, "No. activo":r.activo, "Modelo":r.modelo};
+    SECCIONES.forEach(s=>s.items.forEach((it,i)=>s.cols.forEach(c=>{ row[`${it} – ${COLNAME[c]}`] = r.checklist?.[key(s,i)]?.[c] ?? ""; })));
+    return row;
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(det), "Checklist detallado");
+  return wb;
+}
+
+const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+async function deliverFile(buf, name){
+  const blob = new Blob([buf], {type:XLSX_MIME});
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  if(isIOS && navigator.canShare){
+    const file = new File([blob], name, {type:XLSX_MIME});
+    if(navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+$("#btnExport").addEventListener("click", async ()=>{
+  const list = exportSet();
+  if(!list.length) return;
+  if(typeof XLSX==="undefined"){ $("#expStatus").textContent="No cargó el generador de Excel. Revisa tu conexión y recarga la página."; $("#expStatus").className="status err"; return; }
+  const wb = buildWorkbook(list);
+  const buf = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  const d1 = $("#eDesde").value, d2 = $("#eHasta").value;
+  const name = `diagnosticos_${d1||"inicio"}_a_${d2||today()}.xlsx`;
+  $("#expStatus").className="status"; $("#expStatus").textContent="Preparando archivo…";
+  try{
+    await deliverFile(buf, name);
+    $("#expStatus").textContent = `Archivo ${name} generado (${list.length} equipos).`;
+  }catch(e){
+    $("#expStatus").textContent = e?.name==="AbortError" ? "Descarga cancelada." : "No se pudo descargar: " + (e?.message||"error");
+  }
+});
+
+/* ---------- Requisición / cruce con almacén ---------- */
+function compName(k){ const [sid,i] = k.split("_"); const sec = SECCIONES.find(x=>x.id===sid); return sec ? sec.items[Number(i)] : k; }
+const stockTimers = {};
+function saveStock(k){
+  clearTimeout(stockTimers[k]);
+  stockTimers[k] = setTimeout(()=>{
+    const v = stock[k] || {};
+    queue({action:"stock", key:k, name:compName(k), ex: v.ex ?? null, cod: v.cod || ""});
+  }, 600);
+}
+function subscribeStock(){}
+
+function reqData(){
+  let list = filtered($("#qDesde").value, $("#qHasta").value, "");
+  if($("#qExcl").checked) list = list.filter(r=>r.servicio!=="Chatarra" && r.servicio!=="Equipo obsoleto");
+  const rows = [];
+  SECCIONES.forEach(s=>s.items.forEach((it,i)=>{
+    const k = key(s,i); let req=0; const eqs=[];
+    list.forEach(r=>{ const n = r.checklist?.[k]?.r || 0; if(n>0){ req+=n; eqs.push(`${r.activo} (${n})`); } });
+    if(req>0){
+      const ex = stock[k]?.ex;
+      const falta = Math.max(0, req - (Number(ex)||0));
+      rows.push({k, sec:s.nombre, it, req, ex, cod:stock[k]?.cod||"", falta, eqs});
+    }
+  }));
+  return {list, rows};
+}
+function renderReq(){
+  if(!$("#qDesde").value && !$("#qHasta").value){ $("#qDesde").value = today(); $("#qHasta").value = today(); }
+  subscribeStock();
+  const {list, rows} = reqData();
+  const faltan = rows.filter(r=>r.falta>0);
+  $("#qKpis").innerHTML = `
+    <div class="kpi"><b>${list.length}</b><span>Equipos en el periodo</span></div>
+    <div class="kpi"><b>${rows.length}</b><span>Componentes requeridos</span></div>
+    <div class="kpi"><b>${rows.length-faltan.length}</b><span>Cubiertos por almacén</span></div>
+    <div class="kpi"><b>${faltan.length}</b><span>A requisitar</span></div>`;
+  if(!rows.length){
+    $("#qTabla").innerHTML = `<div class="empty">${list.length ? "Ningún equipo del periodo tiene componentes en “Requiere”." : "No hay diagnósticos en el periodo seleccionado."}</div>`;
+    $("#btnReq").disabled = true; return;
+  }
+  $("#btnReq").disabled = false;
+  $("#qTabla").innerHTML = `<div class="rq-row h"><span>Componente</span><span>Requiere</span><span>Existencia</span><span>Requisitar</span></div>` +
+    rows.map(r=>`<div class="rq-row">
+      <div class="rq-name">${esc(r.it)}<small>${esc(r.eqs.join(", "))}</small>
+        <input type="text" data-cod="${r.k}" value="${esc(r.cod)}" placeholder="Código de almacén" aria-label="Código de almacén ${esc(r.it)}"></div>
+      <div class="rq-n">${r.req}</div>
+      <input type="number" class="ex" min="0" inputmode="numeric" data-ex="${r.k}" value="${r.ex ?? ""}" placeholder="0" aria-label="Existencia ${esc(r.it)}">
+      <div class="rq-out ${r.falta>0?"need":"okk"}" data-out="${r.k}">${r.falta}</div>
+    </div>`).join("");
+}
+$("#qTabla").addEventListener("input", e=>{
+  const ex = e.target.dataset.ex, cod = e.target.dataset.cod;
+  if(ex){
+    stock[ex] = {...(stock[ex]||{}), ex: e.target.value===""?null:Number(e.target.value)};
+    const r = reqData().rows.find(x=>x.k===ex);
+    const out = $(`[data-out="${ex}"]`);
+    if(r && out){ out.textContent = r.falta; out.className = "rq-out " + (r.falta>0?"need":"okk"); }
+    saveStock(ex);
+  }
+  if(cod){ stock[cod] = {...(stock[cod]||{}), cod: e.target.value.trim()}; saveStock(cod); }
+});
+$("#qTabla").addEventListener("focusout", ()=>setTimeout(()=>{ if(!document.activeElement?.closest("#qTabla")){ const {rows}=reqData(); const f=rows.filter(r=>r.falta>0).length; const k=$("#qKpis .kpi:last-child b"); if(k) k.textContent=f; const c=$("#qKpis .kpi:nth-child(3) b"); if(c) c.textContent=rows.length-f; } },0));
+["#qDesde","#qHasta","#qExcl"].forEach(s=>$(s).addEventListener("change",renderReq));
+$$("[data-qrange]").forEach(b=>b.addEventListener("click",()=>{
+  const t = today(), d = new Date(t+"T12:00:00");
+  if(b.dataset.qrange==="hoy"){ $("#qDesde").value=t; }
+  if(b.dataset.qrange==="semana"){ d.setDate(d.getDate()-6); $("#qDesde").value=d.toISOString().slice(0,10); }
+  if(b.dataset.qrange==="mes"){ $("#qDesde").value=t.slice(0,8)+"01"; }
+  $("#qHasta").value=t; renderReq();
+}));
+
+async function saveXlsx(wb, name, statusEl, okMsg){
+  if(typeof XLSX==="undefined"){ statusEl.textContent="No cargó el generador de Excel. Revisa tu conexión y recarga la página."; statusEl.className="status err"; return; }
+  const buf = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  statusEl.className="status"; statusEl.textContent="Preparando archivo…";
+  try{ await deliverFile(buf, name); statusEl.textContent = okMsg; }
+  catch(e){ statusEl.textContent = e?.name==="AbortError" ? "Descarga cancelada." : "No se pudo descargar: "+(e?.message||"error"); }
+}
+$("#btnReq").addEventListener("click", ()=>{
+  const {list, rows} = reqData();
+  const d1=$("#qDesde").value, d2=$("#qHasta").value;
+  const wb = XLSX.utils.book_new();
+  const faltan = rows.filter(r=>r.falta>0);
+  const req = faltan.map(r=>({"Código almacén":r.cod, "Componente":r.it, "Sección":r.sec, "Cantidad a requisitar":r.falta, "Equipos (activo y cantidad)":r.eqs.join(", ")}));
+  const ws1 = req.length ? XLSX.utils.json_to_sheet(req) : XLSX.utils.aoa_to_sheet([["Almacén cubre todos los componentes requeridos del periodo"]]);
+  ws1["!cols"]=[{wch:16},{wch:34},{wch:30},{wch:12},{wch:50}];
+  XLSX.utils.book_append_sheet(wb, ws1, "Requisición");
+  const cruce = rows.map(r=>({"Código almacén":r.cod, "Componente":r.it, "Sección":r.sec, "Requiere":r.req, "Existencia almacén":Number(r.ex)||0, "A requisitar":r.falta, "Cubierto":r.falta>0?"No":"Sí"}));
+  const ws2 = XLSX.utils.json_to_sheet(cruce); ws2["!cols"]=[{wch:16},{wch:34},{wch:30},{wch:10},{wch:12},{wch:12},{wch:9}];
+  XLSX.utils.book_append_sheet(wb, ws2, "Cruce almacén");
+  const det = [];
+  list.forEach(r=>SECCIONES.forEach(s=>s.items.forEach((it,i)=>{ const n=r.checklist?.[key(s,i)]?.r||0; if(n>0) det.push({"Fecha":r.fechaDiag,"No. activo":r.activo,"Modelo":r.modelo,"Servicio":r.servicio,"Componente":it,"Cantidad":n}); })));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(det), "Detalle por equipo");
+  const name = d1===d2 ? `requisicion_${d1}.xlsx` : `requisicion_${d1||"inicio"}_a_${d2||today()}.xlsx`;
+  saveXlsx(wb, name, $("#reqStatus"), `Requisición descargada: ${faltan.length} componentes por requisitar.`);
+});
+
+/* ---------- Navegación y utilidades ---------- */
+function showTab(id){
+  $$("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===id));
+  $$("section.panel").forEach(p=>p.classList.toggle("on", p.id===id));
+  $("#bar").style.display = id==="captura" ? "" : "none";
+  $("#barOT").style.display = id==="otCaptura" ? "" : "none";
+  if(id==="otRegistros") renderOtList();
+  if(id==="otExportar") renderOtExport();
+  if(id==="registros") renderList();
+  if(id==="exportar") renderExport();
+  if(id==="requisicion") renderReq();
+}
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+
+function fillDatalists(){
+  const uniq = k => [...new Set(records.map(r=>r[k]).filter(Boolean))].sort();
+  [["modelo","dl-modelo"],["marca","dl-marca"],["cedis","dl-cedis"],["diagnosticador","dl-diag"]].forEach(([k,id])=>{
+    $("#"+id).innerHTML = uniq(k).map(v=>`<option value="${esc(v)}">`).join("");
+  });
+}
+function renderAll(){
+  fillDatalists(); otDatalists();
+  if($("#otRegistros").classList.contains("on")) renderOtList();
+  if($("#otExportar").classList.contains("on")) renderOtExport();
+  if($("#registros").classList.contains("on")) renderList();
+  if($("#exportar").classList.contains("on")) renderExport();
+  if($("#requisicion").classList.contains("on")) renderReq();
+}
+let tt;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("on"),2800); }
+
+
+/* ================= Módulo: Órdenes de trabajo (EWO) ================= */
+const OT_TIPOS = ["Reparación","MP","Sanitización","Evitable","Llamada repetida"];
+const OT_PROC = [
+  {id:"pm", nombre:"Post-mix", lect:true, items:["Revisar presión del regulador","Revisar etiquetas en válvulas","Limpiar boquillas de difusores","Revisar filtro de agua","Revisar tiempo de carbona","Revisar depósito de hielo","Purgar carbonatador","Ajuste superior","Ajuste inferior","Ajuste único","Revisar fugas de jarabe","Revisar fugas de CO₂","Revisar fugas de agua","Limpiar el condensador","Limpiar el drenaje","Limpiar el cuerpo y el gabinete","Revisar la vida de anaquel"]},
+  {id:"enf", nombre:"Enfriador", lect:true, items:["Limpiar el condensador y serpentín","Lub. motor condensador y evaporador","Verif. de relay, térmico, capacitor","Verif. del voltaje de energía","Verif. de balastro, lámparas y disp.","Verificación o cambio de empaques","Verif. de la temperatura del equipo","Lavado empaques y puerta del eq.","Lavado tapa y aspas motores evapo.","Lavado tapa condensadora","Detalles de pintura y limpieza área"]},
+  {id:"hie", nombre:"Fabricador de hielo", items:["Limpiar el condensador","Revisar el motor ventilador","Revisar el nivel de agua","Revisar el flotador","Revisar el tubo de distribución","Limpiar el evaporador","Limpiar el interruptor del BIN","Revisar la temperatura","Limpiar el desagüe","Cambio de lámparas","Detalles de pintura","Verificación del voltaje"]},
+  {id:"ven", nombre:"Vending", items:["Limpieza general de la máquina","Lubricación de motores de las líneas","Funcionamiento del monedero"]}
+];
+const OT_RAZONES = [
+  ["A","Válvula",["Ajustar mezcla","Micro switch","Solenoide","Cuerpo rajado","O-Ring"]],
+  ["B","Agua",["Nivelar el control","Bomba","Motor anormal","Presión del agua","Fuga de agua en tina","Drenaje","Filtros"]],
+  ["C","Enfriamiento",["Compresor","Ventilador","Suciedad fina","Carga baja","Potencia"]],
+  ["D","CO₂",["Fuga en el regulador","O-Ring","Desconexión rápida","Calibrador"]],
+  ["E","Cliente",["No CO₂/Agua/Jarabe","No hay corriente","Falso contacto","No tiene hielo la tarja","Mal uso del equipo","Manipulación del Brix"]],
+  ["F","Termostato",["Termostato abierto","Termostato cerrado"]],
+  ["G","Circuito eléctrico",["Transformador roto","Tablero de circuitos","Tarjeta electrónica","Monedero","CPU Vending"]],
+  ["H","Jarabe/Producto",["O-Ring en el tanque","Conector I/O","Bolsa","Caja","Lata rota","Bomba de jarabe","O-Ring"]],
+  ["I","Alumbrado",["Interruptor","Lámpara/Bulbo","Inicio/Conector","Circuito (cableado)","Balastra","Arrancador","Transformador"]],
+  ["K","Puerta",["Vidrio","Sello","Rodillo","Bisagras","Cerraduras","Lexanes","Compuerta salida pdto. (lata/pet)"]]
+];
+const RAZON = {}; OT_RAZONES.forEach(([g,gn,its])=>its.forEach((t,i)=>RAZON[`${g}-${i+1}`]=`${t}`));
+const CHECK = {}; OT_PROC.forEach(p=>p.items.forEach((t,i)=>CHECK[`${p.id}_${i}`]={sec:p.nombre, t}));
+
+const mini = (name, opts) => `<div class="mini">${opts.map(o=>`<label><input type="radio" name="${name}" value="${o}">${o}</label>`).join("")}</div>`;
+$("#ot_tipo").innerHTML = OT_TIPOS.map(t=>`<label><input type="checkbox" name="ot_tipo" value="${t}">${t}</label>`).join("");
+$("#ot_proc").innerHTML = OT_PROC.map(p=>`
+  <details class="blk" data-blk="${p.id}"><summary>${p.nombre}<span class="cnt"></span></summary>
+    ${p.id==="pm" ? `<div class="read">
+      <div class="f"><label for="pm_brixAp">Brix aprobado</label><input type="number" step="0.1" inputmode="decimal" id="pm_brixAp"></div>
+      <div class="f"><label for="pm_brixTot">Brix total</label><input type="number" step="0.1" inputmode="decimal" id="pm_brixTot"></div>
+      <div class="f"><label for="pm_temp">Temperatura (°C)</label><input type="number" step="0.1" inputmode="decimal" id="pm_temp">${mini("pm_tempBM",["B","M"])}</div>
+      <div class="f"><label for="pm_presion">Presión carbonatación (psi)</label><input type="number" step="0.1" inputmode="decimal" id="pm_presion"></div>
+      <div class="f"><label for="pm_carb">Carbonatación</label><input type="number" step="0.01" inputmode="decimal" id="pm_carb">${mini("pm_carbBM",["B","M"])}</div>
+      <div class="f"><label>Apariencia</label>${mini("pm_apar",["R","A","V"])}</div>
+      <div class="f"><label>Calidad del agua</label>${mini("pm_agua",["B","M"])}</div>
+    </div>` : ""}
+    ${p.id==="enf" ? `<div class="read">
+      <div class="f"><label>Apariencia</label>${mini("enf_apar",["R","A","V"])}</div>
+      <div class="f"><label for="enf_temp">Temperatura (°C)</label><input type="number" step="0.1" inputmode="decimal" id="enf_temp">${mini("enf_tempBM",["B","M"])}</div>
+    </div>` : ""}
+    <div class="chk">${p.items.map((t,i)=>`<label><input type="checkbox" name="ot_chk" value="${p.id}_${i}">${t}</label>`).join("")}</div>
+  </details>`).join("");
+$("#ot_razones").innerHTML = OT_RAZONES.map(([g,gn,its])=>`
+  <details class="blk"><summary>${g} · ${gn}<span class="cnt"></span></summary>
+    <div class="chk">${its.map((t,i)=>`<label><input type="checkbox" name="ot_raz" value="${g}-${i+1}"><b>${g}-${i+1}</b>${t}</label>`).join("")}</div>
+  </details>`).join("");
+document.querySelectorAll("#otCaptura details.blk").forEach(d=>d.addEventListener("change", ()=>updCounts()));
+function updCounts(){
+  document.querySelectorAll("#otCaptura details.blk").forEach(d=>{
+    const n = d.querySelectorAll('input[type=checkbox]:checked').length;
+    d.querySelector(".cnt").textContent = n ? n : "";
+  });
+}
+$("#dl-ot-teq").innerHTML = ["Post-mix","Enfriador","Fabricador de hielo","Vending"].map(v=>`<option value="${v}">`).join("");
+
+/* Partes */
+function addParte(p={}){
+  const row = document.createElement("div"); row.className = "prow";
+  row.innerHTML = `<input type="text" class="pd" placeholder="Descripción" value="${esc(p.desc||"")}" aria-label="Descripción de parte">
+    <input type="text" class="pn" placeholder="Parte #" value="${esc(p.num||"")}" aria-label="Número de parte">
+    <input type="number" class="pc" min="0" inputmode="numeric" value="${p.cant ?? ""}" aria-label="Cantidad">
+    <button type="button" aria-label="Quitar parte">×</button>`;
+  row.querySelector("button").onclick = ()=>row.remove();
+  $("#ot_partes").appendChild(row);
+}
+$("#ot_addParte").addEventListener("click", ()=>{ addParte(); $("#ot_partes").lastElementChild.querySelector(".pd").focus(); });
+
+/* Tiempos */
+function fmtMin(m){ if(m===null) return "—"; const h = Math.floor(m/60), mm = Math.round(m%60); return `${h} h ${String(mm).padStart(2,"0")} min`; }
+function diffMin(a,b){ if(!a||!b) return null; const d = (new Date(b) - new Date(a))/60000; return d>=0 ? d : null; }
+function updTimes(){
+  const r = diffMin($("#ot_fLlamada").value, $("#ot_fArribo").value), sv = diffMin($("#ot_fArribo").value, $("#ot_fTermino").value);
+  $("#ot_times").innerHTML = `<span>Tiempo de respuesta: <strong>${fmtMin(r)}</strong></span><span>Tiempo de servicio: <strong>${fmtMin(sv)}</strong></span>`;
+}
+["#ot_fLlamada","#ot_fArribo","#ot_fTermino"].forEach(x=>$(x).addEventListener("change",updTimes));
+
+/* Foto */
+let otFoto = null, otEvidencia = "";
+async function compressImage(file){
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((ok,ko)=>{ const i = new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=url; });
+  const max = 1400, k = Math.min(1, max/Math.max(img.width, img.height));
+  const c = document.createElement("canvas"); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+  let q = 0.6, out = c.toDataURL("image/jpeg", q);
+  while(out.length > 280000 && q > 0.3){ q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+  return out;
+}
+$("#ot_foto").addEventListener("change", async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{ otFoto = await compressImage(f); showFoto(); }catch(err){ toast("No se pudo leer la foto."); }
+});
+function showFoto(){
+  $("#ot_fotoPrev").innerHTML = otFoto ? `<img src="${otFoto}" alt="Evidencia de la orden">`
+    : otEvidencia ? `<p class="status">Evidencia guardada. <a href="${esc(otEvidencia)}" target="_blank" rel="noopener">Ver foto</a>. Toma otra solo si quieres reemplazarla.</p>` : "";
+}
+
+/* Leer / llenar */
+const OT_TXT = ["folio","activo","serie","tecnico","numTecnico","ruta","establecimiento","cliente","direccion","tipoEquipo","modelo","proveedor","jefe","fLlamada","fArribo","fTermino","descLlamada","descTrabajo"];
+const radioVal = n => document.querySelector(`input[name="${n}"]:checked`)?.value || "";
+const setRadio = (n,v) => document.querySelectorAll(`input[name="${n}"]`).forEach(x=>x.checked = x.value===v);
+const numOrNull = id => $("#"+id).value==="" ? null : Number($("#"+id).value);
+let otEditingId = null;
+function readOt(){
+  const r = {};
+  OT_TXT.forEach(k=>r[k] = $("#ot_"+k).value.trim());
+  r.tipo = $$('input[name="ot_tipo"]:checked').map(x=>x.value);
+  r.resultado = radioVal("ot_resultado");
+  r.pm = {brixAp:numOrNull("pm_brixAp"), brixTot:numOrNull("pm_brixTot"), temp:numOrNull("pm_temp"), tempBM:radioVal("pm_tempBM"),
+          presion:numOrNull("pm_presion"), carb:numOrNull("pm_carb"), carbBM:radioVal("pm_carbBM"), apar:radioVal("pm_apar"), agua:radioVal("pm_agua")};
+  r.enf = {apar:radioVal("enf_apar"), temp:numOrNull("enf_temp"), tempBM:radioVal("enf_tempBM")};
+  r.checks = $$('input[name="ot_chk"]:checked').map(x=>x.value);
+  r.razones = $$('input[name="ot_raz"]:checked').map(x=>x.value);
+  r.partes = $$("#ot_partes .prow").map(row=>({desc:row.querySelector(".pd").value.trim(), num:row.querySelector(".pn").value.trim(),
+    cant: row.querySelector(".pc").value==="" ? null : Number(row.querySelector(".pc").value)})).filter(p=>p.desc||p.num);
+  r.evidencia = otEvidencia; if(otFoto) r.foto = otFoto;
+  return r;
+}
+function clearOt(resetEdit=true){
+  $("#otFrm").reset(); $("#ot_partes").innerHTML = ""; addParte();
+  otFoto = null; otEvidencia = ""; showFoto(); updTimes(); updCounts();
+  $$("#otCaptura details.blk").forEach(d=>d.open=false);
+  if(resetEdit){ otEditingId = null; $("#ot-edit-flag").textContent = ""; $("#otBtnSave").textContent = "Guardar orden"; }
+}
+function fillOt(r){
+  clearOt(false);
+  OT_TXT.forEach(k=>$("#ot_"+k).value = r[k] ?? "");
+  $$('input[name="ot_tipo"]').forEach(x=>x.checked = (r.tipo||[]).includes(x.value));
+  setRadio("ot_resultado", r.resultado);
+  const pm = r.pm||{}, en = r.enf||{};
+  ["brixAp","brixTot","temp","presion","carb"].forEach(k=>$("#pm_"+k).value = pm[k] ?? "");
+  setRadio("pm_tempBM",pm.tempBM); setRadio("pm_carbBM",pm.carbBM); setRadio("pm_apar",pm.apar); setRadio("pm_agua",pm.agua);
+  $("#enf_temp").value = en.temp ?? ""; setRadio("enf_apar",en.apar); setRadio("enf_tempBM",en.tempBM);
+  $$('input[name="ot_chk"]').forEach(x=>x.checked = (r.checks||[]).includes(x.value));
+  $$('input[name="ot_raz"]').forEach(x=>x.checked = (r.razones||[]).includes(x.value));
+  $("#ot_partes").innerHTML = ""; (r.partes?.length ? r.partes : [{}]).forEach(addParte);
+  otEvidencia = r.evidencia || ""; otFoto = r.foto || null; showFoto();
+  otEditingId = r.id; $("#ot-edit-flag").textContent = "Editando"; $("#otBtnSave").textContent = "Guardar cambios";
+  updTimes(); updCounts();
+}
+clearOt();
+
+$("#otBtnClear").addEventListener("click", ()=>{ clearOt(); window.scrollTo(0,0); });
+$("#otBtnSave").addEventListener("click", ()=>{
+  const d = readOt();
+  if(!d.folio){ toast("Captura el número de orden."); $("#ot_folio").focus(); return; }
+  if(!d.activo){ toast("Captura el número de activo."); $("#ot_activo").focus(); return; }
+  if(ots.some(o=>o.folio===d.folio && o.id!==otEditingId) && !confirm(`La orden ${d.folio} ya está capturada. ¿Guardar otra con el mismo número?`)) return;
+  const now = new Date().toISOString(), prev = ots.find(o=>o.id===otEditingId);
+  const rec = {...d, id: otEditingId || ("o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)), creado: prev?.creado || now, actualizado: now};
+  queue({action:"saveOT", record:rec}); renderAll();
+  toast(otEditingId ? "Cambios guardados." : `Orden ${rec.folio} guardada.`);
+  const keep = {tecnico:rec.tecnico, numTecnico:rec.numTecnico, ruta:rec.ruta, jefe:rec.jefe};
+  clearOt(); Object.entries(keep).forEach(([k,v])=>$("#ot_"+k).value = v);
+  window.scrollTo(0,0); $("#ot_folio").focus();
+});
+
+/* Registros */
+const otFecha = r => (r.fLlamada || r.fArribo || r.creado || "").slice(0,10);
+function otFiltered(desde, hasta, q){
+  return ots.filter(r=>{
+    const f = otFecha(r);
+    if(desde && f < desde) return false; if(hasta && f > hasta) return false;
+    if(q){ const t = [r.folio,r.activo,r.cliente,r.establecimiento].join(" ").toLowerCase(); if(!t.includes(q)) return false; }
+    return true;
+  }).sort((a,b)=> otFecha(b).localeCompare(otFecha(a)) || (b.creado||"").localeCompare(a.creado||""));
+}
+function renderOtList(){
+  const list = otFiltered($("#otDesde").value, $("#otHasta").value, $("#otq").value.trim().toLowerCase());
+  if(!ots.length){ $("#otLista").innerHTML = `<div class="empty">Aún no hay órdenes. Captura la primera en Capturar OT.</div>`; return; }
+  if(!list.length){ $("#otLista").innerHTML = `<div class="empty">Ninguna orden coincide con la búsqueda.</div>`; return; }
+  $("#otLista").innerHTML = list.map(r=>`
+    <div class="rec">
+      <div class="a">OT ${esc(r.folio)}</div>
+      <div class="tag ${r.resultado==="Completo"?"ok":r.resultado==="Incompleto"?"bad":""}">${esc(r.resultado || (r.tipo||[]).join(", ") || "—")}</div>
+      <div class="m">${esc(otFecha(r))} · Activo ${esc(r.activo)} · ${esc(r.establecimiento||"—")}</div>
+      <div class="m" style="justify-self:end">${(r.tipo||[]).join(", ")}${r.foto?" · foto por subir":r.evidencia?" · con foto":""}</div>
+      <div class="acts2"><button class="btn small" data-otedit="${r.id}">Editar</button><button class="btn small danger" data-otdel="${r.id}">Eliminar</button></div>
+    </div>`).join("");
+}
+$("#otLista").addEventListener("click", e=>{
+  const ed = e.target.closest("[data-otedit]"), del = e.target.closest("[data-otdel]");
+  if(ed){ const r = ots.find(x=>x.id===ed.dataset.otedit); if(r){ fillOt(r); showTab("otCaptura"); window.scrollTo(0,0); } }
+  if(del){ const r = ots.find(x=>x.id===del.dataset.otdel);
+    if(r && confirm(`¿Eliminar la orden ${r.folio}? La foto en Drive no se borra.`)){ queue({action:"deleteOT", id:r.id}); renderAll(); toast("Orden eliminada."); } }
+});
+["#otq","#otDesde","#otHasta"].forEach(x=>$(x).addEventListener("input",renderOtList));
+
+/* Exportar */
+function otExportSet(){ return otFiltered($("#oteDesde").value, $("#oteHasta").value, ""); }
+function renderOtExport(){
+  if(!$("#oteDesde").value && !$("#oteHasta").value){ const t = today(); $("#oteDesde").value = t.slice(0,8)+"01"; $("#oteHasta").value = t; }
+  const list = otExportSet();
+  const cnt = t => list.filter(r=>(r.tipo||[]).includes(t)).length;
+  $("#otKpis").innerHTML = `
+    <div class="kpi"><b>${list.length}</b><span>Órdenes en el periodo</span></div>
+    <div class="kpi"><b>${cnt("MP")}</b><span>Mantenimiento preventivo</span></div>
+    <div class="kpi"><b>${cnt("Reparación")}</b><span>Reparaciones</span></div>
+    <div class="kpi"><b>${list.filter(r=>r.resultado==="Incompleto").length}</b><span>Incompletas</span></div>`;
+  $("#otBtnExport").disabled = !list.length;
+}
+["#oteDesde","#oteHasta"].forEach(x=>$(x).addEventListener("input",renderOtExport));
+$$("[data-otrange]").forEach(b=>b.addEventListener("click",()=>{
+  const t = today();
+  if(b.dataset.otrange==="mes"){ $("#oteDesde").value = t.slice(0,8)+"01"; $("#oteHasta").value = t; }
+  if(b.dataset.otrange==="mesant"){ const d = new Date(t.slice(0,8)+"01T12:00:00"); d.setDate(0);
+    const f = d.toISOString().slice(0,10); $("#oteDesde").value = f.slice(0,8)+"01"; $("#oteHasta").value = f; }
+  if(b.dataset.otrange==="todo"){ $("#oteDesde").value = ""; $("#oteHasta").value = ""; }
+  renderOtExport();
+}));
+const dt = v => v ? v.replace("T"," ") : "";
+$("#otBtnExport").addEventListener("click", ()=>{
+  const list = otExportSet(); if(!list.length) return;
+  if(typeof XLSX==="undefined"){ $("#otExpStatus").textContent = "No cargó el generador de Excel. Revisa tu conexión."; return; }
+  const wb = XLSX.utils.book_new();
+  const ord = list.map(r=>{
+    const pm = r.pm||{}, en = r.enf||{};
+    return {
+      "No. OT":r.folio, "Reparación":(r.tipo||[]).includes("Reparación")?"X":"", "MP":(r.tipo||[]).includes("MP")?"X":"",
+      "Sanitización":(r.tipo||[]).includes("Sanitización")?"X":"", "Evitable":(r.tipo||[]).includes("Evitable")?"X":"",
+      "Llamada repetida":(r.tipo||[]).includes("Llamada repetida")?"X":"",
+      "Técnico":r.tecnico, "# Técnico":r.numTecnico, "# Ruta":r.ruta, "Establecimiento":r.establecimiento, "# Cliente":r.cliente,
+      "Dirección":r.direccion, "Tipo de equipo":r.tipoEquipo, "Modelo":r.modelo, "Activo":r.activo, "Serie":r.serie,
+      "Proveedor":r.proveedor, "Jefe refrigeración":r.jefe, "Resultado":r.resultado,
+      "Fecha/hora llamada":dt(r.fLlamada), "Fecha/hora arribo":dt(r.fArribo), "Fecha/hora término":dt(r.fTermino),
+      "Tiempo respuesta (min)":diffMin(r.fLlamada,r.fArribo)===null?"":Math.round(diffMin(r.fLlamada,r.fArribo)),
+      "Tiempo servicio (min)":diffMin(r.fArribo,r.fTermino)===null?"":Math.round(diffMin(r.fArribo,r.fTermino)),
+      "Descripción de la llamada":r.descLlamada,
+      "Brix aprobado":pm.brixAp ?? "", "Brix total":pm.brixTot ?? "", "Temp. post-mix (°C)":pm.temp ?? "", "Temp. post-mix B/M":pm.tempBM||"",
+      "Presión carbonatación (psi)":pm.presion ?? "", "Carbonatación":pm.carb ?? "", "Carbonatación B/M":pm.carbBM||"",
+      "Apariencia post-mix":pm.apar||"", "Calidad del agua":pm.agua||"",
+      "Apariencia enfriador":en.apar||"", "Temp. enfriador (°C)":en.temp ?? "", "Temp. enfriador B/M":en.tempBM||"",
+      "Actividades MP":(r.checks||[]).map(k=>CHECK[k] ? `${CHECK[k].sec}: ${CHECK[k].t}` : k).join(" | "),
+      "Códigos de razones":(r.razones||[]).join(", "),
+      "Razones (descripción)":(r.razones||[]).map(c=>`${c} ${RAZON[c]||""}`).join(" | "),
+      "Partes":(r.partes||[]).map(p=>`${p.desc}${p.num?` (${p.num})`:""} x${p.cant ?? ""}`).join(" | "),
+      "Descripción del trabajo":r.descTrabajo, "Evidencia":r.evidencia || (r.foto?"Pendiente de subir":"")
+    };
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ord), "Órdenes");
+  const partes = []; list.forEach(r=>(r.partes||[]).forEach(p=>partes.push({"No. OT":r.folio,"Fecha":otFecha(r),"Activo":r.activo,"Establecimiento":r.establecimiento,"Descripción de parte":p.desc,"Parte #":p.num,"Cantidad":p.cant ?? ""})));
+  XLSX.utils.book_append_sheet(wb, partes.length ? XLSX.utils.json_to_sheet(partes) : XLSX.utils.aoa_to_sheet([["Sin partes en el periodo"]]), "Partes");
+  const rz = {}; list.forEach(r=>(r.razones||[]).forEach(c=>rz[c]=(rz[c]||0)+1));
+  const rzRows = Object.keys(rz).sort().map(c=>({"Código":c,"Razón":RAZON[c]||"","Órdenes":rz[c]}));
+  XLSX.utils.book_append_sheet(wb, rzRows.length ? XLSX.utils.json_to_sheet(rzRows) : XLSX.utils.aoa_to_sheet([["Sin códigos de razón en el periodo"]]), "Códigos de razones");
+  const ck = list.map(r=>{ const row = {"No. OT":r.folio,"Activo":r.activo}; Object.entries(CHECK).forEach(([k,v])=>row[`${v.sec}: ${v.t}`] = (r.checks||[]).includes(k) ? "X" : ""); return row; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ck), "Checklist MP");
+  const d1 = $("#oteDesde").value, d2 = $("#oteHasta").value;
+  saveXlsx(wb, `ordenes_trabajo_${d1||"inicio"}_a_${d2||today()}.xlsx`, $("#otExpStatus"), `Excel generado con ${list.length} órdenes.`);
+});
+
+function otDatalists(){
+  const uniq = k => [...new Set(ots.map(r=>r[k]).filter(Boolean))].sort();
+  [["tecnico","dl-ot-tec"],["proveedor","dl-ot-prov"],["jefe","dl-ot-jefe"]].forEach(([k,id])=>{
+    $("#"+id).innerHTML = uniq(k).map(v=>`<option value="${esc(v)}">`).join("");
+  });
+}
+
+/* Cambio de módulo */
+const MOD_KEY = "hd-modulo-v1";
+function setModule(m){
+  $$(".mods button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mod===m));
+  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==m);
+  showTab(m==="ot" ? "otCaptura" : "captura");
+  $("#appTitle").textContent = m==="ot" ? "Órdenes de trabajo" : "Hoja de diagnóstico";
+  jset(MOD_KEY, m);
+}
+$$(".mods button").forEach(b=>b.addEventListener("click",()=>setModule(b.dataset.mod)));
+
+/* Arranque */
+setModule(jget(MOD_KEY,"diag"));
+renderAll(); setStatus();
+if(apiReady() && !token) askKey(); else sync();
+</script>
+</body>
+</html>
