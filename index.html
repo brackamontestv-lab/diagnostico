@@ -153,7 +153,7 @@ table.sum td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:70
 .rq-out.need{background:var(--bad-soft);color:var(--bad)}
 .rq-out.okk{background:var(--ok-soft);color:var(--ok)}
 .brand-r{display:flex;align-items:center;gap:8px}
-#store-info.off{color:var(--warn)} #store-info.err{color:var(--bad)}
+#store-info{cursor:pointer;text-align:right} #store-info.off{color:var(--warn)} #store-info.err{color:var(--bad)}
 .gate{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
 .gate[hidden]{display:none}
 .gate .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;max-width:360px;width:100%}
@@ -452,9 +452,10 @@ details.blk .cnt:empty{display:none}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="gate" id="gate" hidden>
   <div class="card">
-    <h2>Clave de acceso</h2>
-    <p>Escribe la clave del equipo. Solo se pide la primera vez en este celular.</p>
-    <input type="password" id="gateKey" autocomplete="off" aria-label="Clave de acceso">
+    <h2>Acceso</h2>
+    <p>Solo se pide la primera vez en este dispositivo.</p>
+    <div class="f" style="margin-bottom:10px"><label for="gateName">Tu nombre</label><input type="text" id="gateName" autocomplete="name"></div>
+    <div class="f"><label for="gateKey">Clave</label><input type="password" id="gateKey" autocomplete="off"></div>
     <button class="btn primary" type="button" id="gateBtn" style="width:100%;margin-top:12px">Entrar</button>
     <p class="status err" id="gateMsg"></p>
   </div>
@@ -558,6 +559,11 @@ const jset = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(
 let ots = jget(K_OTS, []);
 let records = jget(K_REC, []), outbox = jget(K_OUT, []), stock = jget(K_ST, {});
 let editingId = null, token = jget(K_TOK, ""), syncing = false;
+const K_USR = "hd-usuario-v1", K_ROL = "hd-rol-v1";
+let usuario = jget(K_USR, ""), rol = jget(K_ROL, "");
+const isAdmin = () => rol === "admin";
+const norm = x => String(x||"").trim().toLowerCase();
+const puedeEditar = r => isAdmin() || norm(r.capturadoPor) === norm(usuario);
 const apiReady = () => CFG.API_URL && /^https:\/\/script\.google\.com\//.test(CFG.API_URL);
 
 function persist(){ jset(K_OTS, ots); jset(K_REC, records); jset(K_OUT, outbox); jset(K_ST, stock); }
@@ -566,11 +572,11 @@ function setStatus(){
   if(!apiReady()){ el.textContent = "Falta configurar la conexión"; el.className = "err"; return; }
   if(!navigator.onLine){ el.textContent = `Sin conexión${outbox.length?` · ${outbox.length} pendiente(s)`:""}`; el.className = "off"; return; }
   if(outbox.length){ el.textContent = `Sincronizando ${outbox.length}…`; el.className = "off"; return; }
-  el.textContent = "Sincronizado"; el.className = "";
+  el.textContent = `${usuario ? usuario + (isAdmin() ? " (admin)" : "") + " · " : ""}Sincronizado`; el.className = "";
 }
 async function api(payload){
   const r = await fetch(CFG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body: JSON.stringify({...payload, token})});
+    body: JSON.stringify({...payload, token, usuario})});
   const j = await r.json();
   if(!j.ok){ const e = new Error(j.error||"error"); e.code = j.code||"server"; throw e; }
   return j;
@@ -593,7 +599,11 @@ async function flush(){
       }
       persist(); setStatus();
     }
-    catch(e){ if(e.code==="auth") askKey("La clave cambió. Escríbela de nuevo."); break; }
+    catch(e){
+      if(e.code==="forbidden"){ outbox.shift(); persist(); toast(e.message || "No tienes permiso para esa acción."); continue; }
+      if(e.code==="auth") askKey("La clave cambió. Escríbela de nuevo.");
+      break;
+    }
   }
 }
 async function sync(){
@@ -604,6 +614,7 @@ async function sync(){
     if(navigator.onLine){
       const j = await api({action:"list"});
       records = j.records || []; stock = j.stock || {}; ots = j.ots || [];
+      if(j.rol && j.rol !== rol){ rol = j.rol; jset(K_ROL, rol); applyRole(); }
       outbox.forEach(applyOp);           // lo pendiente gana sobre lo del servidor
       persist();
       if(!document.activeElement?.closest("#qTabla")) renderAll(); else fillDatalists();
@@ -620,15 +631,29 @@ async function saveRecord(rec){ queue({action:"save", record:rec}); renderAll();
 async function deleteRecord(id){ queue({action:"delete", id}); renderAll(); }
 
 function askKey(msg){
-  $("#gate").hidden = false; $("#gateMsg").textContent = msg||""; $("#gateKey").value = ""; setTimeout(()=>$("#gateKey").focus(),50);
+  $("#gate").hidden = false; $("#gateMsg").textContent = msg||""; $("#gateKey").value = ""; $("#gateName").value = usuario;
+  setTimeout(()=>(usuario ? $("#gateKey") : $("#gateName")).focus(),50);
 }
 $("#gateBtn").addEventListener("click", async ()=>{
-  const k = $("#gateKey").value.trim(); if(!k) return;
-  $("#gateMsg").textContent = "Verificando…"; token = k;
-  try{ await api({action:"ping"}); jset(K_TOK, token); $("#gate").hidden = true; sync(); }
+  const k = $("#gateKey").value.trim(), n = $("#gateName").value.trim().replace(/\s+/g," ");
+  if(!n){ $("#gateMsg").textContent = "Escribe tu nombre."; $("#gateName").focus(); return; }
+  if(!k) return;
+  $("#gateMsg").textContent = "Verificando…"; token = k; usuario = n;
+  try{
+    const j = await api({action:"ping"});
+    rol = j.rol || "tecnico"; jset(K_TOK, token); jset(K_USR, usuario); jset(K_ROL, rol);
+    $("#gate").hidden = true; applyRole(); sync();
+  }
   catch(e){ token = ""; $("#gateMsg").textContent = e.code==="auth" ? "Clave incorrecta." : "Sin conexión. Intenta de nuevo con internet."; }
 });
 $("#gateKey").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#gateBtn").click(); });
+$("#store-info").addEventListener("click", ()=>{
+  if(!apiReady() || !token) return;
+  if(outbox.length){ toast("Espera a que se suban los pendientes antes de cerrar sesión."); return; }
+  if(confirm(`Sesión de ${usuario||"usuario"}${isAdmin()?" (administrador)":""}. ¿Cerrar sesión en este dispositivo?`)){
+    token = ""; rol = ""; jset(K_TOK, ""); jset(K_ROL, ""); askKey();
+  }
+});
 
 window.addEventListener("online", sync);
 window.addEventListener("offline", setStatus);
@@ -695,7 +720,7 @@ $("#btnSave").addEventListener("click", async ()=>{
   const now = new Date().toISOString();
   const prev = records.find(r=>r.id===editingId);
   const rec = {...data, id: editingId || ("d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
-    creado: prev?.creado || now, actualizado: now};
+    creado: prev?.creado || now, actualizado: now, capturadoPor: prev?.capturadoPor || usuario};
   rec.resumen = resumenDiag(rec);
   const btn = $("#btnSave"); btn.disabled = true;
   try{
@@ -740,7 +765,8 @@ function renderList(){
       <div class="tag ${tagClass(r.servicio)}">${esc(r.servicio || (r.listo?"Listo":"Sin servicio"))}</div>
       <div class="m">${esc(r.fechaDiag)} · ${esc(r.modelo||"—")} · Serie ${esc(r.serie||"—")}</div>
       <div class="m" style="justify-self:end">${(r.actividades||[]).length ? "Act. "+r.actividades.join(", ") : ""}</div>
-      <div class="acts2"><button class="btn small" data-edit="${r.id}">Editar</button><button class="btn small danger" data-del="${r.id}">Eliminar</button></div>
+      <div class="m" style="grid-column:1/-1">Capturó: ${esc(r.capturadoPor||"—")}</div>
+      <div class="acts2">${puedeEditar(r)?`<button class="btn small" data-edit="${r.id}">Editar</button>`:""}${isAdmin()?`<button class="btn small danger" data-del="${r.id}">Eliminar</button>`:""}</div>
     </div>`).join("");
 }
 $("#lista").addEventListener("click", async e=>{
@@ -1151,7 +1177,7 @@ $("#otBtnSave").addEventListener("click", ()=>{
   if(!d.activo){ toast("Captura el número de activo."); $("#ot_activo").focus(); return; }
   if(ots.some(o=>o.folio===d.folio && o.id!==otEditingId) && !confirm(`La orden ${d.folio} ya está capturada. ¿Guardar otra con el mismo número?`)) return;
   const now = new Date().toISOString(), prev = ots.find(o=>o.id===otEditingId);
-  const rec = {...d, id: otEditingId || ("o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)), creado: prev?.creado || now, actualizado: now};
+  const rec = {...d, id: otEditingId || ("o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)), creado: prev?.creado || now, actualizado: now, capturadoPor: prev?.capturadoPor || usuario};
   rec.resumen = { partes:(rec.partes||[]).map(p=>`${p.desc}${p.num?` (${p.num})`:""} x${p.cant ?? ""}`).join(", "),
     razones:(rec.razones||[]).map(c=>`${c} ${RAZON[c]||""}`).join(", "),
     tRespuesta: diffMin(rec.fLlamada,rec.fArribo)===null ? "" : Math.round(diffMin(rec.fLlamada,rec.fArribo)),
@@ -1183,7 +1209,8 @@ function renderOtList(){
       <div class="tag ${r.resultado==="Completo"?"ok":r.resultado==="Incompleto"?"bad":""}">${esc(r.resultado || (r.tipo||[]).join(", ") || "—")}</div>
       <div class="m">${esc(otFecha(r))} · Activo ${esc(r.activo)} · ${esc(r.establecimiento||"—")}</div>
       <div class="m" style="justify-self:end">${(r.tipo||[]).join(", ")}${r.foto?" · foto por subir":r.evidencia?" · con foto":""}</div>
-      <div class="acts2"><button class="btn small" data-otedit="${r.id}">Editar</button><button class="btn small danger" data-otdel="${r.id}">Eliminar</button></div>
+      <div class="m" style="grid-column:1/-1">Capturó: ${esc(r.capturadoPor||"—")}</div>
+      <div class="acts2">${puedeEditar(r)?`<button class="btn small" data-otedit="${r.id}">Editar</button>`:""}${isAdmin()?`<button class="btn small danger" data-otdel="${r.id}">Eliminar</button>`:""}</div>
     </div>`).join("");
 }
 $("#otLista").addEventListener("click", e=>{
@@ -1266,9 +1293,17 @@ function otDatalists(){
 
 /* Cambio de módulo */
 const MOD_KEY = "hd-modulo-v1";
+const ADMIN_TABS = ["requisicion","exportar","otExportar"];
+function applyRole(){
+  const cur = jget(MOD_KEY,"diag");
+  const active = document.querySelector("section.panel.on")?.id;
+  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==cur || (!isAdmin() && ADMIN_TABS.includes(b.dataset.tab)));
+  if(!isAdmin() && ADMIN_TABS.includes(active)) showTab(cur==="ot" ? "otCaptura" : "captura");
+  renderAll(); setStatus();
+}
 function setModule(m){
   $$(".mods button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mod===m));
-  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==m);
+  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==m || (!isAdmin() && ADMIN_TABS.includes(b.dataset.tab)));
   showTab(m==="ot" ? "otCaptura" : "captura");
   $("#appTitle").textContent = m==="ot" ? "Órdenes de trabajo" : "Hoja de diagnóstico";
   jset(MOD_KEY, m);
@@ -1278,7 +1313,7 @@ $$(".mods button").forEach(b=>b.addEventListener("click",()=>setModule(b.dataset
 /* Arranque */
 setModule(jget(MOD_KEY,"diag"));
 renderAll(); setStatus();
-if(apiReady() && !token) askKey(); else sync();
+if(apiReady() && (!token || !usuario || !rol)) askKey(); else sync();
 </script>
 </body>
 </html>
