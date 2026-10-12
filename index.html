@@ -49,8 +49,9 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .brand h1{margin:0;font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
 .brand small{color:var(--muted);font-size:.8rem}
-nav.tabs{display:flex;gap:6px;margin-top:10px}
-nav.tabs button{flex:1;min-width:0;font-size:.88rem;border:1px solid var(--line);background:var(--paper);padding:9px 6px;border-radius:8px;font-weight:600;cursor:pointer}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:1 1 auto;min-width:0;white-space:nowrap;padding-left:10px!important;padding-right:10px!important;font-size:.88rem;border:1px solid var(--line);background:var(--paper);padding:9px 6px;border-radius:8px;font-weight:600;cursor:pointer}
 nav.tabs button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
 :root[data-theme="dark"] nav.tabs button[aria-selected="true"]{color:#0E1620}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav.tabs button[aria-selected="true"]{color:#0E1620}}
@@ -186,6 +187,24 @@ details.blk .cnt:empty{display:none}
 .times{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:8px}
 .times strong{color:var(--ink)}
 .ev img{max-width:100%;border-radius:8px;border:1px solid var(--line);margin-top:8px;display:block}
+.inv{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.inv .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.inv .cd{font-weight:800;font-variant-numeric:tabular-nums}
+.inv .ds{color:var(--muted);font-size:.85rem}
+.qty{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:8px}
+.qty div{background:var(--field);border:1px solid var(--line);border-radius:7px;padding:6px 4px;text-align:center}
+.qty b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.qty span{font-size:.6rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.qty .ok b{color:var(--ok)} .qty .wn b{color:var(--warn)} .qty .bd b{color:var(--bad)}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue);margin:4px 4px 0 0}
+.pill.w{background:var(--warn-soft);color:var(--warn)} .pill.b{background:var(--bad-soft);color:var(--bad)} .pill.g{background:var(--ok-soft);color:var(--ok)}
+.mv{border-top:1px solid var(--line);padding:9px 0;font-size:.86rem;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.mv:first-child{border-top:0}
+.mv .t{font-weight:700} .mv .m{color:var(--muted);font-size:.8rem}
+.mv .q{font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.cnt-row{display:grid;grid-template-columns:1fr 74px 74px;gap:6px;align-items:center;border-top:1px solid var(--line);padding:8px 0}
+.cnt-row input{text-align:center;min-height:36px;padding:6px 2px;font-weight:700}
+.cnt-row small{display:block;color:var(--muted);font-size:.75rem}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90vw}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
@@ -196,17 +215,24 @@ details.blk .cnt:empty{display:none}
   <header class="top">
     <div class="brand"><h1 id="appTitle">Hoja de diagnóstico</h1><span class="brand-r"><button class="btn small" id="btnInstall" type="button" hidden>Instalar app</button><small id="store-info">Conectando…</small></span></div>
     <div class="mods" role="tablist" aria-label="Módulo">
-      <button type="button" aria-selected="true" data-mod="diag">Diagnóstico</button>
-      <button type="button" aria-selected="false" data-mod="ot">Órdenes de trabajo</button>
+      <button type="button" aria-selected="true" data-mod="diag" data-roles="admin,tecnico">Diagnóstico</button>
+      <button type="button" aria-selected="false" data-mod="ot" data-roles="admin,tecnico">Órdenes de trabajo</button>
+      <button type="button" aria-selected="false" data-mod="alm" data-roles="admin,almacen">Almacén</button>
     </div>
     <nav class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-mod="diag" data-tab="captura">Capturar</button>
       <button role="tab" aria-selected="false" data-mod="diag" data-tab="registros">Registros</button>
-      <button role="tab" aria-selected="false" data-mod="diag" data-tab="requisicion">Requisición</button>
-      <button role="tab" aria-selected="false" data-mod="diag" data-tab="exportar">Exportar</button>
+      <button role="tab" aria-selected="false" data-mod="diag" data-tab="requisicion" data-roles="admin">Requisición</button>
+      <button role="tab" aria-selected="false" data-mod="diag" data-tab="exportar" data-roles="admin">Exportar</button>
       <button role="tab" aria-selected="false" data-mod="ot" data-tab="otCaptura" hidden>Capturar OT</button>
       <button role="tab" aria-selected="false" data-mod="ot" data-tab="otRegistros" hidden>Registros</button>
-      <button role="tab" aria-selected="false" data-mod="ot" data-tab="otExportar" hidden>Exportar</button>
+      <button role="tab" aria-selected="false" data-mod="ot" data-tab="otExportar" data-roles="admin" hidden>Exportar</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almExist" hidden>Existencias</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almMov" hidden>Movimiento</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almPend" hidden>Pendientes</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almConteo" hidden>Conteo</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almCat" hidden>Catálogo</button>
+      <button role="tab" aria-selected="false" data-mod="alm" data-tab="almRepo" data-roles="admin" hidden>Reposición</button>
     </nav>
   </header>
 
@@ -434,6 +460,120 @@ details.blk .cnt:empty{display:none}
       </div>
     </div>
   </section>
+
+  <!-- ALMACÉN: EXISTENCIAS -->
+  <section class="panel" id="almExist">
+    <div class="filters">
+      <div class="f wide"><label for="aq">Buscar código o descripción</label><input type="text" id="aq"></div>
+      <div class="f wide"><label for="aFiltro">Mostrar</label>
+        <select id="aFiltro"><option value="">Todas</option><option value="disp">Con disponible</option><option value="cons">Con consigna</option><option value="tran">Con tránsito</option><option value="repo">Por reponer</option><option value="cero">Sin existencia</option></select></div>
+    </div>
+    <div class="kpis" id="aKpis"></div>
+    <div id="aLista"></div>
+    <button class="btn" type="button" id="aExport" data-roles="admin" style="width:100%;margin-top:6px">Descargar inventario en Excel</button>
+    <p class="status" id="aExpStatus"></p>
+  </section>
+
+  <!-- ALMACÉN: MOVIMIENTO -->
+  <section class="panel" id="almMov">
+    <div class="sheet">
+      <h2>Registrar movimiento</h2>
+      <div class="body grid">
+        <div class="f wide"><label for="mTipo">Tipo de movimiento</label><select id="mTipo"></select></div>
+        <div class="f wide"><p class="status" id="mAyuda" style="margin:0"></p></div>
+        <div class="f wide"><label for="mRef">Refacción (código o descripción) *</label><input type="text" id="mRef" list="dl-refs" autocomplete="off"><small class="status" id="mRefInfo"></small></div>
+        <div class="f"><label for="mCant">Cantidad *</label><input type="number" id="mCant" min="1" inputmode="numeric"></div>
+        <div class="f"><label for="mFecha">Fecha</label><input type="date" id="mFecha"></div>
+        <div class="f" data-fld="pedido"><label for="mPedido">No. de pedido / OC</label><input type="text" id="mPedido" list="dl-pedidos"></div>
+        <div class="f" data-fld="eta"><label for="mEta">Fecha estimada de llegada</label><input type="date" id="mEta"></div>
+        <div class="f" data-fld="factura"><label for="mFactura">No. de factura</label><input type="text" id="mFactura" list="dl-facturas"></div>
+        <div class="f" data-fld="entrada"><label for="mEntrada">No. de entrada (Juan Carlos)</label><input type="text" id="mEntrada"></div>
+        <div class="f" data-fld="vale"><label for="mVale">No. de vale *</label><input type="text" id="mVale"></div>
+        <div class="f" data-fld="activo"><label for="mActivo">Activo / equipo</label><input type="text" id="mActivo" inputmode="numeric"></div>
+        <div class="f" data-fld="recibe"><label for="mRecibe">Entregado a</label><input type="text" id="mRecibe"></div>
+        <div class="f" data-fld="autorizo"><label for="mAutorizo">Autorizó *</label><input type="text" id="mAutorizo"></div>
+        <div class="f wide" data-fld="correo"><label for="mCorreo">Referencia del correo de autorización *</label><input type="text" id="mCorreo" placeholder="Asunto y fecha del correo"></div>
+        <div class="f wide" data-fld="motivo"><label for="mMotivo">Motivo</label><input type="text" id="mMotivo" placeholder="Ej. paro de operación"></div>
+        <div class="f wide"><label for="mNota">Nota</label><input type="text" id="mNota"></div>
+        <div class="f wide"><button class="btn primary" type="button" id="mGuardar">Registrar movimiento</button></div>
+      </div>
+    </div>
+    <div class="sheet">
+      <h2>Últimos movimientos</h2>
+      <div class="body" id="mLista"></div>
+    </div>
+  </section>
+
+  <!-- ALMACÉN: PENDIENTES -->
+  <section class="panel" id="almPend">
+    <div id="pLista"></div>
+  </section>
+
+  <!-- ALMACÉN: CONTEO -->
+  <section class="panel" id="almConteo">
+    <div class="sheet">
+      <h2>Conteo cíclico de la semana</h2>
+      <div class="body">
+        <p class="status" style="margin-top:0">Cuenta físicamente estas refacciones y captura lo que encuentres. Clase A cada 7 días, B cada 30, C cada 90.</p>
+        <div class="cnt-row" style="border-top:0;font-size:.72rem;color:var(--muted);font-weight:600"><span>Refacción</span><span style="text-align:center">Disponible</span><span style="text-align:center">Consigna</span></div>
+        <div id="cLista"></div>
+        <button class="btn primary" type="button" id="cGuardar" style="width:100%;margin-top:10px">Guardar conteo</button>
+        <p class="status" id="cStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALMACÉN: CATÁLOGO -->
+  <section class="panel" id="almCat">
+    <div class="sheet">
+      <h2><span>Alta de refacción y carga inicial</span><span class="m" id="rEditFlag"></span></h2>
+      <div class="body grid">
+        <div class="f"><label for="rCod">Código de almacén *</label><input type="text" id="rCod"></div>
+        <div class="f wide"><label for="rDesc">Descripción *</label><input type="text" id="rDesc"></div>
+        <div class="f"><label for="rComp">Componente del diagnóstico</label><select id="rComp"></select></div>
+        <div class="f"><label for="rClase">Clase</label><select id="rClase"><option value="A">A · crítica / alto valor</option><option value="B" selected>B · media</option><option value="C">C · consumible</option></select></div>
+        <div class="f"><label for="rUnidad">Unidad</label><input type="text" id="rUnidad" value="pza"></div>
+        <div class="f"><label for="rEntrega">Tiempo de entrega (días)</label><input type="number" id="rEntrega" value="60" min="0" inputmode="numeric"></div>
+        <div class="f"><label for="rSeg">Días de seguridad</label><input type="number" id="rSeg" value="15" min="0" inputmode="numeric"></div>
+        <div class="f"><label for="rCedis">% para otros CEDIS</label><input type="number" id="rCedis" value="0" min="0" inputmode="numeric"></div>
+        <div class="f"><label for="rMin">Mínimo fijo (opcional)</label><input type="number" id="rMin" min="0" inputmode="numeric"></div>
+        <div class="f"><label for="rMax">Máximo fijo (opcional)</label><input type="number" id="rMax" min="0" inputmode="numeric"></div>
+        <div class="f" data-new><label for="rIniDisp">Existencia inicial disponible</label><input type="number" id="rIniDisp" min="0" inputmode="numeric"></div>
+        <div class="f" data-new><label for="rIniCons">Existencia inicial en consigna</label><input type="number" id="rIniCons" min="0" inputmode="numeric"></div>
+        <div class="f" data-new><label for="rIniFact">Factura de la consigna</label><input type="text" id="rIniFact"></div>
+        <div class="f wide" style="flex-direction:row;gap:8px"><button class="btn" type="button" id="rLimpiar">Limpiar</button><button class="btn primary" type="button" id="rGuardar" style="flex:1">Guardar refacción</button></div>
+      </div>
+    </div>
+    <div class="sheet">
+      <h2>Importar desde Excel</h2>
+      <div class="body">
+        <p class="status" style="margin-top:0">Columnas reconocidas: Código, Descripción, Disponible, Consigna, Factura, Clase, Componente. Solo se dan de alta los códigos nuevos; los existentes no se tocan.</p>
+        <input type="file" id="rImport" accept=".xlsx,.xls,.csv">
+        <p class="status" id="rImpStatus"></p>
+      </div>
+    </div>
+    <div class="filters"><div class="f wide"><label for="rq">Buscar en catálogo</label><input type="text" id="rq"></div></div>
+    <div id="rLista"></div>
+  </section>
+
+  <!-- ALMACÉN: REPOSICIÓN -->
+  <section class="panel" id="almRepo">
+    <div class="sheet">
+      <h2>Reposición sugerida</h2>
+      <div class="body">
+        <div class="filters">
+          <div class="f"><label for="pCiclo">Ciclo de compra (días)</label><input type="number" id="pCiclo" value="30" min="1" inputmode="numeric"></div>
+          <div class="f"><label for="pVentana">Diagnósticos pendientes de los últimos (días)</label><input type="number" id="pVentana" value="45" min="1" inputmode="numeric"></div>
+          <div class="f"><label for="pHist">Consumo promedio de los últimos (días)</label><input type="number" id="pHist" value="90" min="7" inputmode="numeric"></div>
+        </div>
+        <p class="status" style="margin-top:0">Posición = Disponible + Consigna + Tránsito − Comprometido. Se sugiere pedir cuando la posición llega al punto de reorden: consumo diario × (entrega + seguridad) × (1 + % CEDIS), más lo comprometido.</p>
+        <div class="kpis" id="pKpis"></div>
+        <div class="tbl-wrap"><table class="sum" id="pTabla"></table></div>
+        <button class="btn primary" type="button" id="pExport" style="width:100%;margin-top:12px">Descargar requisición sugerida en Excel</button>
+        <p class="status" id="pStatus"></p>
+      </div>
+    </div>
+  </section>
 </div>
 
 <div class="bar" id="barOT" style="display:none">
@@ -463,7 +603,7 @@ details.blk .cnt:empty{display:none}
 
 <datalist id="dl-modelo"></datalist><datalist id="dl-marca"></datalist>
 <datalist id="dl-cedis"></datalist><datalist id="dl-diag"></datalist>
-<datalist id="dl-ot-tec"></datalist><datalist id="dl-ot-teq"></datalist><datalist id="dl-ot-prov"></datalist><datalist id="dl-ot-jefe"></datalist>
+<datalist id="dl-refs"></datalist><datalist id="dl-pedidos"></datalist><datalist id="dl-facturas"></datalist><datalist id="dl-ot-tec"></datalist><datalist id="dl-ot-teq"></datalist><datalist id="dl-ot-prov"></datalist><datalist id="dl-ot-jefe"></datalist>
 
 <script>
 /* ---------- Catálogos del formato ---------- */
@@ -557,22 +697,24 @@ const K_OTS="hd-ordenes-v1"; const K_REC="hd-registros-v1", K_OUT="hd-pendientes
 const jget = (k,d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
 const jset = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
 let ots = jget(K_OTS, []);
+let refs = jget("hd-refacciones-v1", []), movs = jget("hd-movimientos-v1", []);
 let records = jget(K_REC, []), outbox = jget(K_OUT, []), stock = jget(K_ST, {});
 let editingId = null, token = jget(K_TOK, ""), syncing = false;
 const K_USR = "hd-usuario-v1", K_ROL = "hd-rol-v1";
 let usuario = jget(K_USR, ""), rol = jget(K_ROL, "");
-const isAdmin = () => rol === "admin";
+const isAdmin = () => rol === "admin" || !apiReady();
+const permitido = el => { const r = el.dataset.roles; if(!r) return rol !== "almacen" || el.dataset.mod === "alm" || !el.dataset.mod; return !apiReady() || r.split(",").includes(rol); };
 const norm = x => String(x||"").trim().toLowerCase();
 const puedeEditar = r => isAdmin() || norm(r.capturadoPor) === norm(usuario);
 const apiReady = () => CFG.API_URL && /^https:\/\/script\.google\.com\//.test(CFG.API_URL);
 
-function persist(){ jset(K_OTS, ots); jset(K_REC, records); jset(K_OUT, outbox); jset(K_ST, stock); }
+function persist(){ jset("hd-refacciones-v1", refs); jset("hd-movimientos-v1", movs); jset(K_OTS, ots); jset(K_REC, records); jset(K_OUT, outbox); jset(K_ST, stock); }
 function setStatus(){
   const el = $("#store-info");
   if(!apiReady()){ el.textContent = "Falta configurar la conexión"; el.className = "err"; return; }
   if(!navigator.onLine){ el.textContent = `Sin conexión${outbox.length?` · ${outbox.length} pendiente(s)`:""}`; el.className = "off"; return; }
   if(outbox.length){ el.textContent = `Sincronizando ${outbox.length}…`; el.className = "off"; return; }
-  el.textContent = `${usuario ? usuario + (isAdmin() ? " (admin)" : "") + " · " : ""}Sincronizado`; el.className = "";
+  el.textContent = `${usuario ? usuario + (isAdmin() ? " (admin)" : rol==="almacen" ? " (almacén)" : "") + " · " : ""}Sincronizado`; el.className = "";
 }
 async function api(payload){
   const r = await fetch(CFG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
@@ -586,6 +728,9 @@ function applyOp(op){
   if(op.action==="delete"){ records = records.filter(r=>r.id!==op.id); }
   if(op.action==="saveOT"){ const i = ots.findIndex(r=>r.id===op.record.id); if(i>=0) ots[i]=op.record; else ots.push(op.record); }
   if(op.action==="deleteOT"){ ots = ots.filter(r=>r.id!==op.id); }
+  if(op.action==="saveRef"){ const i = refs.findIndex(r=>r.id===op.record.id); if(i>=0) refs[i]=op.record; else refs.push(op.record); }
+  if(op.action==="saveMov"){ if(!movs.some(m=>m.id===op.record.id)) movs.push(op.record); }
+  if(op.action==="movStatus"){ const m = movs.find(x=>x.id===op.id); if(m){ m.estatus = op.estatus; m.resolvio = usuario; } }
   if(op.action==="stock"){ stock[op.key] = {...(stock[op.key]||{}), ex:op.ex, cod:op.cod}; }
 }
 async function flush(){
@@ -613,7 +758,7 @@ async function sync(){
     await flush();
     if(navigator.onLine){
       const j = await api({action:"list"});
-      records = j.records || []; stock = j.stock || {}; ots = j.ots || [];
+      records = j.records || []; stock = j.stock || {}; ots = j.ots || []; refs = j.refs || []; movs = j.movs || [];
       if(j.rol && j.rol !== rol){ rol = j.rol; jset(K_ROL, rol); applyRole(); }
       outbox.forEach(applyOp);           // lo pendiente gana sobre lo del servidor
       persist();
@@ -1003,6 +1148,7 @@ function showTab(id){
   $("#bar").style.display = id==="captura" ? "" : "none";
   $("#barOT").style.display = id==="otCaptura" ? "" : "none";
   if(id==="otRegistros") renderOtList();
+  if(id && id.startsWith("alm")) renderAlm(id);
   if(id==="otExportar") renderOtExport();
   if(id==="registros") renderList();
   if(id==="exportar") renderExport();
@@ -1020,6 +1166,9 @@ function renderAll(){
   fillDatalists(); otDatalists();
   if($("#otRegistros").classList.contains("on")) renderOtList();
   if($("#otExportar").classList.contains("on")) renderOtExport();
+  almDatalists();
+  const onAlm = document.querySelector("section.panel.on")?.id;
+  if(onAlm && onAlm.startsWith("alm") && !document.activeElement?.closest("#almConteo, #almMov, #almCat")) renderAlm(onAlm);
   if($("#registros").classList.contains("on")) renderList();
   if($("#exportar").classList.contains("on")) renderExport();
   if($("#requisicion").classList.contains("on")) renderReq();
@@ -1291,27 +1440,397 @@ function otDatalists(){
   });
 }
 
+/* ================= Módulo: Almacén de refacciones ================= */
+const MOV_TIPOS = {
+  inicial:   {n:"Carga inicial",                         roles:["admin","almacen"], d:(q,f)=>({dDisp:f.disp||0, dCons:f.cons||0}), ayuda:"Existencia física al iniciar el control."},
+  pedido:    {n:"Pedido (en tránsito)",                  roles:["admin"],           d:q=>({dTran:q}),        fl:["pedido","eta"],                 req:["pedido"], ayuda:"Refacciones pedidas que aún no llegan."},
+  cancelPed: {n:"Cancelar pedido",                       roles:["admin"],           d:q=>({dTran:-q}),       fl:["pedido"],                       req:["pedido"], ayuda:"Quita del tránsito un pedido que ya no llegará."},
+  recepcion: {n:"Recepción física → consigna",           roles:["admin","almacen"], d:(q,f)=>({dCons:q, dTran:f.pedido?-q:0}), fl:["pedido","factura"], req:["factura"], ayuda:"Llegó al almacén pero la factura aún no tiene entrada."},
+  liberacion:{n:"Liberación: factura con entrada → disponible", roles:["admin","almacen"], d:q=>({dCons:-q, dDisp:q}), fl:["factura","entrada"], req:["factura","entrada"], ayuda:"Juan Carlos ya dio entrada a la factura."},
+  salida:    {n:"Salida con vale (disponible)",          roles:["admin","almacen"], d:q=>({dDisp:-q}),       fl:["vale","activo","recibe"],        req:["vale"], ayuda:"Entrega normal de refacción disponible."},
+  salidaCons:{n:"Salida de consigna con autorización",   roles:["admin","almacen"], d:q=>({dCons:-q}),       fl:["vale","activo","recibe","factura","autorizo","correo","motivo"], req:["vale","autorizo","correo"], ayuda:"Requiere correo de autorización. Queda por autorizar en la app y pendiente de regularizar hasta que la factura tenga entrada."},
+  ajuste:    {n:"Ajuste por conteo",                     roles:[],                  d:(q,f)=>({dDisp:f.dDisp||0, dCons:f.dCons||0})}
+};
+const FLD_IDS = {pedido:"mPedido", eta:"mEta", factura:"mFactura", entrada:"mEntrada", vale:"mVale", activo:"mActivo", recibe:"mRecibe", autorizo:"mAutorizo", correo:"mCorreo", motivo:"mMotivo"};
+const CLASE_DIAS = {A:7, B:30, C:90};
+const efectivo = m => !["por autorizar","rechazada","anulado"].includes(m.estatus||"");
+const refById = id => refs.find(r=>r.id===id);
+const refLabel = r => `${r.id} · ${r.desc}`;
+const nid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+function saldos(){
+  const S = {};
+  refs.forEach(r=>S[r.id]={disp:0, cons:0, tran:0});
+  movs.forEach(m=>{ if(!efectivo(m)) return; const x = S[m.ref] ||= {disp:0,cons:0,tran:0};
+    x.disp += m.dDisp||0; x.cons += m.dCons||0; x.tran += m.dTran||0; });
+  Object.values(S).forEach(x=>{ x.tran = Math.max(0, x.tran); });
+  return S;
+}
+function consumoDiario(refId, dias){
+  const desde = new Date(Date.now() - dias*864e5).toISOString().slice(0,10);
+  const q = movs.filter(m=>m.ref===refId && efectivo(m) && (m.tipo==="salida"||m.tipo==="salidaCons") && m.fecha>=desde).reduce((a,m)=>a+m.cant,0);
+  return q / dias;
+}
+/* Comprometido: lo que piden los diagnósticos recientes (no chatarra) y aún no sale para ese activo */
+function comprometido(ventana){
+  const desde = new Date(Date.now() - ventana*864e5).toISOString().slice(0,10);
+  const porComp = {};
+  refs.forEach(r=>{ if(r.comp) (porComp[r.comp] ||= []).push(r.id); });
+  const C = {};
+  records.filter(d=>d.fechaDiag>=desde && d.servicio!=="Chatarra" && d.servicio!=="Equipo obsoleto").forEach(d=>{
+    Object.entries(d.checklist||{}).forEach(([k,v])=>{
+      const need = v.r||0; const ids = porComp[k]; if(!need || !ids) return;
+      const salio = movs.filter(m=>efectivo(m) && ids.includes(m.ref) && (m.tipo==="salida"||m.tipo==="salidaCons") && String(m.activo||"")===String(d.activo)).reduce((a,m)=>a+m.cant,0);
+      const pend = Math.max(0, need - salio); if(!pend) return;
+      C[ids[0]] = (C[ids[0]]||0) + pend;
+    });
+  });
+  return C;
+}
+function calcRepo(){
+  const S = saldos(), C = comprometido(Number($("#pVentana").value)||45);
+  const ciclo = Number($("#pCiclo").value)||30, hist = Number($("#pHist").value)||90;
+  return refs.map(r=>{
+    const s = S[r.id]||{disp:0,cons:0,tran:0}, comp = C[r.id]||0, cd = consumoDiario(r.id, hist);
+    const fac = 1 + (Number(r.cedis)||0)/100;
+    const rop = r.min!=null && r.min!=="" ? Number(r.min) : Math.ceil(cd*((Number(r.entrega)||0)+(Number(r.seg)||0))*fac);
+    const max = r.max!=null && r.max!=="" ? Number(r.max) : Math.max(rop, Math.ceil(rop + cd*ciclo*fac));
+    const pos = s.disp + s.cons + s.tran - comp;
+    const sug = pos <= rop && (max - pos) > 0 ? Math.ceil(max - pos) : (pos < 0 ? -pos : 0);
+    return {r, ...s, comp, cd, rop, max, pos, sug};
+  });
+}
+
+/* ---- Datalists ---- */
+function almDatalists(){
+  $("#dl-refs").innerHTML = refs.slice().sort((a,b)=>a.id.localeCompare(b.id)).map(r=>`<option value="${esc(refLabel(r))}">`).join("");
+  const ped = [...new Set(movs.filter(m=>m.pedido).map(m=>m.pedido))], fac = [...new Set(movs.filter(m=>m.factura).map(m=>m.factura))];
+  $("#dl-pedidos").innerHTML = ped.map(v=>`<option value="${esc(v)}">`).join("");
+  $("#dl-facturas").innerHTML = fac.map(v=>`<option value="${esc(v)}">`).join("");
+}
+function parseRef(txt){ const t = String(txt||"").trim(); if(!t) return null; const code = t.split(" · ")[0].trim();
+  return refById(code) || refs.find(r=>r.desc.toLowerCase()===t.toLowerCase()) || null; }
+
+function renderAlm(id){
+  if(id==="almExist") renderExist();
+  if(id==="almMov") renderMov();
+  if(id==="almPend") renderPend();
+  if(id==="almConteo") renderConteo();
+  if(id==="almCat") renderCat();
+  if(id==="almRepo") renderRepo();
+}
+
+/* ---- Existencias ---- */
+function renderExist(){
+  const S = saldos(), R = Object.fromEntries(calcRepo().map(x=>[x.r.id,x]));
+  const q = $("#aq").value.trim().toLowerCase(), f = $("#aFiltro").value;
+  const tot = Object.values(S).reduce((a,x)=>({disp:a.disp+x.disp, cons:a.cons+x.cons, tran:a.tran+x.tran}),{disp:0,cons:0,tran:0});
+  $("#aKpis").innerHTML = `
+    <div class="kpi"><b>${refs.length}</b><span>Refacciones en catálogo</span></div>
+    <div class="kpi"><b>${tot.disp}</b><span>Piezas disponibles</span></div>
+    <div class="kpi"><b>${tot.cons}</b><span>Piezas en consigna</span></div>
+    <div class="kpi"><b>${tot.tran}</b><span>Piezas en tránsito</span></div>`;
+  const list = refs.filter(r=>{
+    const s = S[r.id]||{}, x = R[r.id]||{};
+    if(q && !(`${r.id} ${r.desc}`.toLowerCase().includes(q))) return false;
+    if(f==="disp") return s.disp>0; if(f==="cons") return s.cons>0; if(f==="tran") return s.tran>0;
+    if(f==="repo") return x.sug>0; if(f==="cero") return (s.disp+s.cons)<=0;
+    return true;
+  }).sort((a,b)=>a.id.localeCompare(b.id));
+  if(!refs.length){ $("#aLista").innerHTML = `<div class="empty">Aún no hay refacciones. Dalas de alta en la pestaña Catálogo, con su existencia disponible y en consigna.</div>`; return; }
+  $("#aLista").innerHTML = list.length ? list.map(r=>{
+    const s = S[r.id]||{disp:0,cons:0,tran:0}, x = R[r.id]||{};
+    return `<div class="inv">
+      <div class="top"><span class="cd">${esc(r.id)}</span><span class="pill">Clase ${esc(r.clase||"B")}</span></div>
+      <div class="ds">${esc(r.desc)}</div>
+      <div class="qty">
+        <div class="${s.disp>0?"ok":"bd"}"><b>${s.disp}</b><span>Disp.</span></div>
+        <div class="${s.cons>0?"wn":""}"><b>${s.cons}</b><span>Consig.</span></div>
+        <div><b>${s.tran}</b><span>Tráns.</span></div>
+        <div><b>${x.comp||0}</b><span>Comp.</span></div>
+        <div class="${x.sug>0?"bd":""}"><b>${x.pos ?? 0}</b><span>Posic.</span></div>
+      </div>
+      ${x.sug>0 && isAdmin() ? `<span class="pill b">Sugerido pedir: ${x.sug}</span>` : ""}
+    </div>`; }).join("") : `<div class="empty">Ninguna refacción coincide.</div>`;
+}
+["#aq","#aFiltro"].forEach(x=>$(x).addEventListener("input", renderExist));
+$("#aExport").addEventListener("click", ()=>{
+  const S = saldos(), R = Object.fromEntries(calcRepo().map(x=>[x.r.id,x]));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(refs.map(r=>{ const s=S[r.id]||{}, x=R[r.id]||{};
+    return {"Código":r.id,"Descripción":r.desc,"Clase":r.clase,"Unidad":r.unidad,"Disponible":s.disp||0,"Consigna":s.cons||0,"Tránsito":s.tran||0,
+      "Comprometido":x.comp||0,"Posición":x.pos||0,"Punto de reorden":x.rop||0,"Máximo":x.max||0,"Sugerido pedir":x.sug||0}; })), "Inventario");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movs.slice().sort((a,b)=>(a.fecha||"").localeCompare(b.fecha||"")).map(movRow)), "Movimientos");
+  saveXlsx(wb, `inventario_refacciones_${today()}.xlsx`, $("#aExpStatus"), "Inventario descargado.");
+});
+function movRow(m){ const r = refById(m.ref)||{};
+  return {"Fecha":m.fecha,"Tipo":MOV_TIPOS[m.tipo]?.n||m.tipo,"Código":m.ref,"Descripción":r.desc||"","Cantidad":m.cant,
+    "Δ Disponible":m.dDisp||0,"Δ Consigna":m.dCons||0,"Δ Tránsito":m.dTran||0,"Pedido":m.pedido||"","Fecha estimada":m.eta||"","Factura":m.factura||"",
+    "No. entrada":m.entrada||"","Vale":m.vale||"","Activo":m.activo||"","Entregado a":m.recibe||"","Autorizó":m.autorizo||"","Correo":m.correo||"",
+    "Motivo":m.motivo||"","Estatus":m.estatus||"aplicado","Registró":m.registro||"","Nota":m.nota||""}; }
+
+/* ---- Movimiento ---- */
+function fillTipos(){
+  const opts = Object.entries(MOV_TIPOS).filter(([k,t])=>t.roles.length && (!apiReady() || t.roles.includes(rol)));
+  const cur = $("#mTipo").value;
+  $("#mTipo").innerHTML = opts.map(([k,t])=>`<option value="${k}">${t.n}</option>`).join("");
+  if(opts.some(([k])=>k===cur)) $("#mTipo").value = cur;
+  updTipo();
+}
+function updTipo(){
+  const t = MOV_TIPOS[$("#mTipo").value]; if(!t) return;
+  $$("#almMov [data-fld]").forEach(el=>el.hidden = !(t.fl||[]).includes(el.dataset.fld));
+  $("#mAyuda").textContent = t.ayuda || "";
+  updRefInfo();
+}
+function updRefInfo(){
+  const r = parseRef($("#mRef").value), S = saldos();
+  $("#mRefInfo").textContent = r ? `Disponible ${S[r.id]?.disp||0} · Consigna ${S[r.id]?.cons||0} · Tránsito ${S[r.id]?.tran||0}` : ($("#mRef").value ? "No está en el catálogo. Dala de alta en Catálogo." : "");
+}
+$("#mTipo").addEventListener("change", updTipo);
+$("#mRef").addEventListener("input", updRefInfo);
+function renderMov(){
+  if(!$("#mFecha").value) $("#mFecha").value = today();
+  fillTipos();
+  const last = movs.slice().sort((a,b)=>(b.creado||"").localeCompare(a.creado||"")).slice(0,40);
+  $("#mLista").innerHTML = last.length ? last.map(m=>{ const r = refById(m.ref)||{}; const t = MOV_TIPOS[m.tipo]||{n:m.tipo};
+    const sign = (m.dDisp||0)+(m.dCons||0)+(m.dTran||0);
+    const est = m.estatus ? `<span class="pill ${m.estatus==="por autorizar"?"w":m.estatus==="autorizada"?"g":"b"}">${esc(m.estatus)}</span>` : "";
+    return `<div class="mv"><div><span class="t">${esc(t.n)}</span> ${est}<div class="m">${esc(m.ref)} · ${esc(r.desc||"")}</div>
+      <div class="m">${esc(m.fecha)}${m.vale?` · Vale ${esc(m.vale)}`:""}${m.factura?` · Fact. ${esc(m.factura)}`:""}${m.pedido?` · Ped. ${esc(m.pedido)}`:""}${m.activo?` · Activo ${esc(m.activo)}`:""} · ${esc(m.registro||"")}</div></div>
+      <div class="q">${m.tipo==="ajuste"||m.tipo==="inicial" ? (sign>0?"+":"")+sign : (sign<0?"−":"+")+m.cant}
+      ${isAdmin() && m.estatus!=="anulado" && m.estatus!=="rechazada" ? `<br><button class="btn small danger" data-anular="${m.id}">Anular</button>` : ""}</div></div>`; }).join("")
+    : `<div class="empty">Sin movimientos todavía.</div>`;
+}
+$("#mLista").addEventListener("click", e=>{ const b = e.target.closest("[data-anular]"); if(!b) return;
+  const m = movs.find(x=>x.id===b.dataset.anular);
+  if(m && confirm(`¿Anular este movimiento de ${m.cant} pza(s) de ${m.ref}? Se revierte su efecto en el inventario.`)){ queue({action:"movStatus", id:m.id, estatus:"anulado"}); renderAll(); }
+});
+$("#mGuardar").addEventListener("click", ()=>{
+  const tipo = $("#mTipo").value, t = MOV_TIPOS[tipo], r = parseRef($("#mRef").value), cant = Number($("#mCant").value);
+  if(!r){ toast("Elige una refacción del catálogo."); $("#mRef").focus(); return; }
+  if(!(cant>0)){ toast("Captura la cantidad."); $("#mCant").focus(); return; }
+  const f = {}; Object.entries(FLD_IDS).forEach(([k,id])=>{ if((t.fl||[]).includes(k)) f[k] = $("#"+id).value.trim(); });
+  for(const k of (t.req||[])) if(!f[k]){ toast("Falta: " + $(`#${FLD_IDS[k]}`).previousElementSibling.textContent.replace(" *","")); $("#"+FLD_IDS[k]).focus(); return; }
+  const S = saldos()[r.id]||{disp:0,cons:0,tran:0};
+  if(tipo==="salida" && cant > S.disp && !confirm(`Solo hay ${S.disp} disponible(s). ¿Registrar de todos modos?`)) return;
+  if(tipo==="salidaCons" && cant > S.cons && !confirm(`Solo hay ${S.cons} en consigna. ¿Registrar de todos modos?`)) return;
+  if(tipo==="liberacion" && cant > S.cons && !confirm(`Solo hay ${S.cons} en consigna. ¿Registrar de todos modos?`)) return;
+  const d = tipo==="inicial" ? {dDisp:cant} : t.d(cant, f);
+  const m = {id:nid("m"), tipo, ref:r.id, cant, fecha:$("#mFecha").value||today(), ...f, ...d, nota:$("#mNota").value.trim(),
+    registro:usuario, creado:new Date().toISOString(), estatus: tipo==="salidaCons" ? (isAdmin() ? "autorizada" : "por autorizar") : ""};
+  queue({action:"saveMov", record:m}); renderAll();
+  toast(tipo==="salidaCons" && !isAdmin() ? "Salida de consigna registrada. Queda por autorizar." : "Movimiento registrado.");
+  ["mRef","mCant","mVale","mActivo","mRecibe","mAutorizo","mCorreo","mMotivo","mNota","mEntrada"].forEach(id=>$("#"+id).value="");
+  updRefInfo(); renderMov();
+});
+
+/* ---- Pendientes ---- */
+function pendientes(){
+  const S = saldos(), hoy = today();
+  const porAut = movs.filter(m=>m.tipo==="salidaCons" && m.estatus==="por autorizar");
+  const libs = movs.filter(m=>m.tipo==="liberacion" && efectivo(m));
+  const sinReg = movs.filter(m=>m.tipo==="salidaCons" && m.estatus==="autorizada" && !m.regularizada &&
+    !libs.some(l=>l.ref===m.ref && l.factura && l.factura===m.factura && (l.creado||"")>=(m.creado||"")));
+  const cons = refs.filter(r=>(S[r.id]?.cons||0)>0).map(r=>{
+    const rec = movs.filter(m=>m.ref===r.id && m.tipo==="recepcion" && efectivo(m)).map(m=>m.fecha).sort();
+    const desde = rec[0] || ""; const dias = desde ? Math.floor((Date.parse(hoy)-Date.parse(desde))/864e5) : null;
+    const facts = [...new Set(movs.filter(m=>m.ref===r.id && (m.tipo==="recepcion"||m.tipo==="inicial") && m.factura && efectivo(m)).map(m=>m.factura))];
+    return {r, cant:S[r.id].cons, dias, facts};
+  }).sort((a,b)=>(b.dias||0)-(a.dias||0));
+  const peds = {};
+  movs.filter(m=>efectivo(m) && m.pedido && (m.tipo==="pedido"||m.tipo==="recepcion"||m.tipo==="cancelPed")).forEach(m=>{
+    const k = m.pedido+"|"+m.ref; const p = peds[k] ||= {pedido:m.pedido, ref:m.ref, pend:0, eta:"", fecha:""};
+    p.pend += m.dTran||0; if(m.tipo==="pedido"){ p.eta = m.eta||p.eta; p.fecha = p.fecha || m.fecha; }
+  });
+  const transito = Object.values(peds).filter(p=>p.pend>0).sort((a,b)=>(a.eta||"9").localeCompare(b.eta||"9"));
+  return {porAut, sinReg, cons, transito, hoy};
+}
+function renderPend(){
+  const P = pendientes();
+  const sec = (titulo, cuerpo) => `<div class="sheet"><h2>${titulo}</h2><div class="body">${cuerpo}</div></div>`;
+  const nada = t => `<p class="status" style="margin:0">${t}</p>`;
+  $("#pLista").innerHTML =
+    sec(`Salidas de consigna por autorizar <span class="pill w">${P.porAut.length}</span>`, P.porAut.length ? P.porAut.map(m=>{ const r = refById(m.ref)||{};
+      return `<div class="mv"><div><span class="t">${esc(m.ref)} · ${esc(r.desc||"")}</span>
+        <div class="m">${m.cant} pza(s) · Vale ${esc(m.vale)} · Activo ${esc(m.activo||"—")} · ${esc(m.fecha)}</div>
+        <div class="m">Autorizó: ${esc(m.autorizo)} · Correo: ${esc(m.correo)}${m.motivo?` · ${esc(m.motivo)}`:""} · Registró ${esc(m.registro)}</div></div>
+        <div class="q">${isAdmin()?`<button class="btn small" data-aut="${m.id}">Autorizar</button><br><button class="btn small danger" data-rech="${m.id}" style="margin-top:4px">Rechazar</button>`:`<span class="pill w">Esperando</span>`}</div></div>`; }).join("") : nada("No hay salidas por autorizar."))
+  + sec(`Salidas de consigna pendientes de regularizar <span class="pill b">${P.sinReg.length}</span>`, P.sinReg.length ? P.sinReg.map(m=>{ const r = refById(m.ref)||{};
+      return `<div class="mv"><div><span class="t">${esc(m.ref)} · ${esc(r.desc||"")}</span>
+        <div class="m">${m.cant} pza(s) · Vale ${esc(m.vale)} · Factura ${esc(m.factura||"sin capturar")} · ${esc(m.fecha)}</div></div>
+        <div class="q"><span class="pill b">${Math.floor((Date.parse(P.hoy)-Date.parse(m.fecha))/864e5)} días</span></div></div>`; }).join("")
+      + `<p class="status">Se cierran solas cuando se registra la liberación de la misma refacción y factura.</p>` : nada("Todo regularizado."))
+  + sec(`En consigna (sin entrada de factura) <span class="pill w">${P.cons.reduce((a,c)=>a+c.cant,0)} pzas</span>`, P.cons.length ? P.cons.map(c=>
+      `<div class="mv"><div><span class="t">${esc(c.r.id)} · ${esc(c.r.desc)}</span><div class="m">Factura(s): ${esc(c.facts.join(", ")||"—")}</div></div>
+       <div class="q">${c.cant}<br>${c.dias!==null?`<span class="pill ${c.dias>30?"b":"w"}">${c.dias} días</span>`:""}</div></div>`).join("") : nada("No hay refacciones en consigna."))
+  + sec(`Pedidos en tránsito <span class="pill">${P.transito.length}</span>`, P.transito.length ? P.transito.map(p=>{ const r = refById(p.ref)||{}; const venc = p.eta && p.eta < P.hoy;
+      return `<div class="mv"><div><span class="t">Pedido ${esc(p.pedido)} · ${esc(p.ref)}</span><div class="m">${esc(r.desc||"")} · Pedido el ${esc(p.fecha||"—")}</div></div>
+        <div class="q">${p.pend}<br><span class="pill ${venc?"b":""}">${venc?"Vencido ":"Llega "}${esc(p.eta||"s/f")}</span></div></div>`; }).join("") : nada("No hay pedidos pendientes de llegar."));
+}
+$("#pLista").addEventListener("click", e=>{
+  const a = e.target.closest("[data-aut]"), r = e.target.closest("[data-rech]");
+  if(a && confirm("¿Autorizar esta salida de consigna? Se descontará del inventario en consigna.")){ queue({action:"movStatus", id:a.dataset.aut, estatus:"autorizada"}); renderAll(); renderPend(); }
+  if(r && confirm("¿Rechazar esta salida? No afectará el inventario.")){ queue({action:"movStatus", id:r.dataset.rech, estatus:"rechazada"}); renderAll(); renderPend(); }
+});
+
+/* ---- Conteo cíclico ---- */
+function porContar(){
+  const hoy = Date.parse(today());
+  return refs.map(r=>{
+    const ult = movs.filter(m=>m.ref===r.id && (m.tipo==="ajuste"||m.tipo==="inicial") && efectivo(m)).map(m=>m.fecha).sort().pop() || "";
+    const dias = ult ? Math.floor((hoy-Date.parse(ult))/864e5) : 9999;
+    return {r, ult, vence: dias - (CLASE_DIAS[r.clase]||30)};
+  }).filter(x=>x.vence>=0).sort((a,b)=>(a.r.clase||"B").localeCompare(b.r.clase||"B") || b.vence-a.vence).slice(0,10);
+}
+function renderConteo(){
+  const L = porContar();
+  $("#cLista").innerHTML = L.length ? L.map(x=>`<div class="cnt-row"><div>${esc(x.r.id)} <span class="pill">Clase ${esc(x.r.clase||"B")}</span><small>${esc(x.r.desc)}${x.ult?` · último conteo ${esc(x.ult)}`:" · sin conteo"}</small></div>
+    <input type="number" min="0" inputmode="numeric" data-cd="${esc(x.r.id)}" data-st="disp" aria-label="Disponible contado ${esc(x.r.id)}">
+    <input type="number" min="0" inputmode="numeric" data-cd="${esc(x.r.id)}" data-st="cons" aria-label="Consigna contada ${esc(x.r.id)}"></div>`).join("")
+    : `<div class="empty">No hay conteos pendientes esta semana.</div>`;
+  $("#cGuardar").disabled = !L.length;
+}
+$("#cGuardar").addEventListener("click", ()=>{
+  const S = saldos(), filas = {};
+  $$("#cLista input").forEach(i=>{ if(i.value!=="") (filas[i.dataset.cd] ||= {})[i.dataset.st] = Number(i.value); });
+  const ids = Object.keys(filas); if(!ids.length){ toast("Captura al menos un conteo."); return; }
+  let difs = 0;
+  ids.forEach(id=>{
+    const c = filas[id], s = S[id]||{disp:0,cons:0};
+    const dDisp = c.disp!==undefined ? c.disp - s.disp : 0, dCons = c.cons!==undefined ? c.cons - s.cons : 0;
+    if(dDisp||dCons) difs++;
+    queue({action:"saveMov", record:{id:nid("m"), tipo:"ajuste", ref:id, cant:Math.abs(dDisp)+Math.abs(dCons), fecha:today(), dDisp, dCons,
+      nota:`Conteo: disponible ${c.disp ?? "—"} (sistema ${s.disp}), consigna ${c.cons ?? "—"} (sistema ${s.cons})`, registro:usuario, creado:new Date().toISOString(), estatus:""}});
+  });
+  $("#cStatus").textContent = `Conteo guardado: ${ids.length} refacción(es), ${difs} con diferencia.`;
+  renderAll(); renderConteo();
+});
+
+/* ---- Catálogo ---- */
+let refEditing = null;
+$("#rComp").innerHTML = `<option value="">— Sin vincular —</option>` + SECCIONES.map(s=>`<optgroup label="${esc(s.nombre)}">${s.items.map((it,i)=>`<option value="${key(s,i)}">${esc(it)}</option>`).join("")}</optgroup>`).join("");
+function clearRef(){
+  ["rCod","rDesc","rMin","rMax","rIniDisp","rIniCons","rIniFact"].forEach(id=>$("#"+id).value="");
+  $("#rComp").value=""; $("#rClase").value="B"; $("#rUnidad").value="pza"; $("#rEntrega").value=60; $("#rSeg").value=15; $("#rCedis").value=0;
+  refEditing = null; $("#rCod").disabled = false; $("#rEditFlag").textContent = ""; $$("#almCat [data-new]").forEach(e=>e.hidden=false);
+}
+$("#rLimpiar").addEventListener("click", clearRef);
+$("#rGuardar").addEventListener("click", ()=>{
+  const id = $("#rCod").value.trim().toUpperCase(), desc = $("#rDesc").value.trim();
+  if(!id || !desc){ toast("Captura código y descripción."); return; }
+  if(!refEditing && refById(id)){ toast("Ese código ya existe. Búscalo abajo para editarlo."); return; }
+  const num = x => $("#"+x).value==="" ? null : Number($("#"+x).value);
+  const rec = {id, desc, comp:$("#rComp").value, clase:$("#rClase").value, unidad:$("#rUnidad").value.trim()||"pza",
+    entrega:num("rEntrega")??60, seg:num("rSeg")??15, cedis:num("rCedis")??0, min:num("rMin"), max:num("rMax"),
+    creado: refById(id)?.creado || new Date().toISOString(), actualizado:new Date().toISOString()};
+  queue({action:"saveRef", record:rec});
+  if(!refEditing){
+    const d = num("rIniDisp")||0, c = num("rIniCons")||0, now = new Date().toISOString();
+    if(d||c) queue({action:"saveMov", record:{id:nid("m"), tipo:"inicial", ref:id, cant:d+c, fecha:today(), dDisp:d, dCons:c,
+      factura:$("#rIniFact").value.trim(), nota:"Carga inicial", registro:usuario, creado:now, estatus:""}});
+  }
+  toast(refEditing ? "Refacción actualizada." : `Refacción ${id} dada de alta.`);
+  clearRef(); renderAll(); renderCat(); $("#rCod").focus();
+});
+function renderCat(){
+  const S = saldos(), q = $("#rq").value.trim().toLowerCase();
+  const list = refs.filter(r=>!q || `${r.id} ${r.desc}`.toLowerCase().includes(q)).sort((a,b)=>a.id.localeCompare(b.id));
+  $("#rLista").innerHTML = list.length ? list.map(r=>`<div class="rec"><div class="a">${esc(r.id)}</div><div class="tag">Clase ${esc(r.clase||"B")}</div>
+    <div class="m" style="grid-column:1/-1">${esc(r.desc)} · Disp. ${S[r.id]?.disp||0} · Consigna ${S[r.id]?.cons||0} · Entrega ${r.entrega??"—"} días</div>
+    <div class="acts2"><button class="btn small" data-redit="${esc(r.id)}">Editar</button></div></div>`).join("")
+    : `<div class="empty">${refs.length?"Ninguna coincide.":"Catálogo vacío."}</div>`;
+}
+$("#rq").addEventListener("input", renderCat);
+$("#rLista").addEventListener("click", e=>{ const b = e.target.closest("[data-redit]"); if(!b) return; const r = refById(b.dataset.redit); if(!r) return;
+  $("#rCod").value = r.id; $("#rCod").disabled = true; $("#rDesc").value = r.desc; $("#rComp").value = r.comp||""; $("#rClase").value = r.clase||"B";
+  $("#rUnidad").value = r.unidad||"pza"; $("#rEntrega").value = r.entrega??60; $("#rSeg").value = r.seg??15; $("#rCedis").value = r.cedis??0;
+  $("#rMin").value = r.min??""; $("#rMax").value = r.max??""; refEditing = r.id; $("#rEditFlag").textContent = "Editando";
+  $$("#almCat [data-new]").forEach(e=>e.hidden=true); window.scrollTo(0,0);
+});
+$("#rImport").addEventListener("change", async e=>{
+  const file = e.target.files[0]; if(!file) return;
+  if(typeof XLSX==="undefined"){ $("#rImpStatus").textContent = "No cargó el lector de Excel. Revisa tu conexión."; return; }
+  try{
+    const wb = XLSX.read(await file.arrayBuffer(), {type:"array"});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:""});
+    const norm2 = k => String(k).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z]/g,"");
+    const pick = (row, names) => { for(const [k,v] of Object.entries(row)) if(names.includes(norm2(k))) return v; return ""; };
+    const compByName = n => { const t = norm2(n); for(const s of SECCIONES) for(let i=0;i<s.items.length;i++) if(norm2(s.items[i])===t) return key(s,i); return ""; };
+    let nuevos = 0, omitidos = 0; const now = new Date().toISOString();
+    rows.forEach(row=>{
+      const id = String(pick(row,["codigo","clave","codigoalmacen","sku","numerodeparte","parte"])).trim().toUpperCase();
+      const desc = String(pick(row,["descripcion","descripciondelarticulo","articulo","refaccion","nombre"])).trim();
+      if(!id || !desc){ omitidos++; return; }
+      if(refById(id)){ omitidos++; return; }
+      const clase = String(pick(row,["clase","abc"])).trim().toUpperCase();
+      queue({action:"saveRef", record:{id, desc, comp:compByName(pick(row,["componente"])), clase:["A","B","C"].includes(clase)?clase:"B", unidad:"pza",
+        entrega:60, seg:15, cedis:0, min:null, max:null, creado:now, actualizado:now}});
+      const d = Number(pick(row,["disponible","existencia","existenciadisponible","stock"]))||0, c = Number(pick(row,["consigna","enconsigna"]))||0;
+      if(d||c) queue({action:"saveMov", record:{id:nid("m"), tipo:"inicial", ref:id, cant:d+c, fecha:today(), dDisp:d, dCons:c,
+        factura:String(pick(row,["factura","nofactura"])).trim(), nota:"Carga inicial (importación)", registro:usuario, creado:now, estatus:""}});
+      nuevos++;
+    });
+    $("#rImpStatus").textContent = `Importación lista: ${nuevos} refacciones nuevas, ${omitidos} renglones omitidos (sin código/descripción o ya existentes).`;
+    renderAll(); renderCat();
+  }catch(err){ $("#rImpStatus").textContent = "No se pudo leer el archivo: " + err.message; }
+  e.target.value = "";
+});
+
+/* ---- Reposición ---- */
+function renderRepo(){
+  const R = calcRepo().sort((a,b)=>b.sug-a.sug || a.r.id.localeCompare(b.r.id));
+  const conSug = R.filter(x=>x.sug>0);
+  $("#pKpis").innerHTML = `
+    <div class="kpi"><b>${conSug.length}</b><span>Refacciones por pedir</span></div>
+    <div class="kpi"><b>${conSug.reduce((a,x)=>a+x.sug,0)}</b><span>Piezas sugeridas</span></div>
+    <div class="kpi"><b>${R.reduce((a,x)=>a+x.comp,0)}</b><span>Piezas comprometidas</span></div>
+    <div class="kpi"><b>${R.filter(x=>x.disp<=0 && x.comp>0).length}</b><span>Comprometidas sin disponible</span></div>`;
+  $("#pTabla").innerHTML = R.length ? `<thead><tr><th>Código</th><th>Disp.</th><th>Cons.</th><th>Tráns.</th><th>Comp.</th><th>Posición</th><th>Reorden</th><th>Máx.</th><th>Pedir</th></tr></thead><tbody>` +
+    R.map(x=>`<tr><td>${esc(x.r.id)}<br><small style="color:var(--muted)">${esc(x.r.desc)}</small></td><td class="v">${x.disp}</td><td class="v">${x.cons}</td><td class="v">${x.tran}</td>
+      <td class="v">${x.comp}</td><td class="v">${x.pos}</td><td class="v">${x.rop}</td><td class="v">${x.max}</td><td class="v" style="color:${x.sug>0?"var(--bad)":"inherit"}">${x.sug}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td>Sin refacciones en catálogo.</td></tr></tbody>`;
+  $("#pExport").disabled = !R.length;
+}
+["#pCiclo","#pVentana","#pHist"].forEach(x=>$(x).addEventListener("input", renderRepo));
+$("#pExport").addEventListener("click", ()=>{
+  const R = calcRepo(), hist = Number($("#pHist").value)||90;
+  const wb = XLSX.utils.book_new();
+  const req = R.filter(x=>x.sug>0).map(x=>({"Código":x.r.id,"Descripción":x.r.desc,"Clase":x.r.clase,"Cantidad a pedir":x.sug,"Unidad":x.r.unidad,
+    "Disponible":x.disp,"Consigna":x.cons,"Tránsito":x.tran,"Comprometido":x.comp,"Posición":x.pos,"Punto de reorden":x.rop,"Máximo":x.max,
+    "Consumo diario":Math.round(x.cd*100)/100,"Entrega (días)":x.r.entrega,"% otros CEDIS":x.r.cedis}));
+  XLSX.utils.book_append_sheet(wb, req.length ? XLSX.utils.json_to_sheet(req) : XLSX.utils.aoa_to_sheet([["No hay refacciones por pedir"]]), "Requisición sugerida");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(R.map(x=>({"Código":x.r.id,"Descripción":x.r.desc,"Disponible":x.disp,"Consigna":x.cons,"Tránsito":x.tran,
+    "Comprometido":x.comp,"Posición":x.pos,"Punto de reorden":x.rop,"Máximo":x.max,"Sugerido":x.sug,[`Consumo diario (${hist} d)`]:Math.round(x.cd*100)/100}))), "Cálculo completo");
+  const P = pendientes();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.cons.map(c=>({"Código":c.r.id,"Descripción":c.r.desc,"En consigna":c.cant,"Factura(s)":c.facts.join(", "),"Días en consigna":c.dias??""}))), "Consigna");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.transito.map(p=>({"Pedido":p.pedido,"Código":p.ref,"Descripción":refById(p.ref)?.desc||"","Pendiente":p.pend,"Fecha pedido":p.fecha,"Llegada estimada":p.eta}))), "Tránsito");
+  saveXlsx(wb, `requisicion_sugerida_${today()}.xlsx`, $("#pStatus"), `Requisición sugerida: ${req.length} refacciones.`);
+});
+
 /* Cambio de módulo */
 const MOD_KEY = "hd-modulo-v1";
 const ADMIN_TABS = ["requisicion","exportar","otExportar"];
+function modPermitido(m){ const b = document.querySelector(`.mods button[data-mod="${m}"]`); return b && permitido(b); }
 function applyRole(){
-  const cur = jget(MOD_KEY,"diag");
-  const active = document.querySelector("section.panel.on")?.id;
-  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==cur || (!isAdmin() && ADMIN_TABS.includes(b.dataset.tab)));
-  if(!isAdmin() && ADMIN_TABS.includes(active)) showTab(cur==="ot" ? "otCaptura" : "captura");
+  $$(".mods button").forEach(b=>b.hidden = !permitido(b));
+  $$("[data-roles]:not(nav.tabs button):not(.mods button)").forEach(el=>el.hidden = !permitido(el));
+  let cur = jget(MOD_KEY,"diag");
+  if(!modPermitido(cur)) cur = ["diag","ot","alm"].find(modPermitido) || "diag";
+  setModule(cur);
   renderAll(); setStatus();
 }
 function setModule(m){
   $$(".mods button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mod===m));
-  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==m || (!isAdmin() && ADMIN_TABS.includes(b.dataset.tab)));
-  showTab(m==="ot" ? "otCaptura" : "captura");
-  $("#appTitle").textContent = m==="ot" ? "Órdenes de trabajo" : "Hoja de diagnóstico";
+  $$("nav.tabs button").forEach(b=>b.hidden = b.dataset.mod!==m || !permitido(b));
+  showTab(m==="ot" ? "otCaptura" : m==="alm" ? "almExist" : "captura");
+  $("#appTitle").textContent = m==="ot" ? "Órdenes de trabajo" : m==="alm" ? "Almacén de refacciones" : "Hoja de diagnóstico";
   jset(MOD_KEY, m);
 }
 $$(".mods button").forEach(b=>b.addEventListener("click",()=>setModule(b.dataset.mod)));
 
 /* Arranque */
-setModule(jget(MOD_KEY,"diag"));
+applyRole();
 renderAll(); setStatus();
 if(apiReady() && (!token || !usuario || !rol)) askKey(); else sync();
 </script>

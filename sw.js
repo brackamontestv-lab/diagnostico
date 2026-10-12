@@ -1,5 +1,5 @@
 // Service worker: guarda la app para abrir rápido y sin conexión.
-const CACHE = "adc-mtto-v2";
+const CACHE = "adc-mtto-v3";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"];
 
