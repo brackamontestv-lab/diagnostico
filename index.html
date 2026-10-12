@@ -222,7 +222,6 @@ details.blk .cnt:empty{display:none}
     <nav class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-mod="diag" data-tab="captura">Capturar</button>
       <button role="tab" aria-selected="false" data-mod="diag" data-tab="registros">Registros</button>
-      <button role="tab" aria-selected="false" data-mod="diag" data-tab="requisicion" data-roles="admin">Requisición</button>
       <button role="tab" aria-selected="false" data-mod="diag" data-tab="exportar" data-roles="admin">Exportar</button>
       <button role="tab" aria-selected="false" data-mod="ot" data-tab="otCaptura" hidden>Capturar OT</button>
       <button role="tab" aria-selected="false" data-mod="ot" data-tab="otRegistros" hidden>Registros</button>
@@ -464,7 +463,7 @@ details.blk .cnt:empty{display:none}
   <!-- ALMACÉN: EXISTENCIAS -->
   <section class="panel" id="almExist">
     <div class="filters">
-      <div class="f wide"><label for="aq">Buscar código o descripción</label><input type="text" id="aq"></div>
+      <div class="f wide"><label for="aq">Buscar SKU o descripción</label><input type="text" id="aq"></div>
       <div class="f wide"><label for="aFiltro">Mostrar</label>
         <select id="aFiltro"><option value="">Todas</option><option value="disp">Con disponible</option><option value="cons">Con consigna</option><option value="tran">Con tránsito</option><option value="repo">Por reponer</option><option value="cero">Sin existencia</option></select></div>
     </div>
@@ -481,7 +480,7 @@ details.blk .cnt:empty{display:none}
       <div class="body grid">
         <div class="f wide"><label for="mTipo">Tipo de movimiento</label><select id="mTipo"></select></div>
         <div class="f wide"><p class="status" id="mAyuda" style="margin:0"></p></div>
-        <div class="f wide"><label for="mRef">Refacción (código o descripción) *</label><input type="text" id="mRef" list="dl-refs" autocomplete="off"><small class="status" id="mRefInfo"></small></div>
+        <div class="f wide"><label for="mRef">Refacción (SKU o descripción) *</label><input type="text" id="mRef" list="dl-refs" autocomplete="off"><small class="status" id="mRefInfo"></small></div>
         <div class="f"><label for="mCant">Cantidad *</label><input type="number" id="mCant" min="1" inputmode="numeric"></div>
         <div class="f"><label for="mFecha">Fecha</label><input type="date" id="mFecha"></div>
         <div class="f" data-fld="pedido"><label for="mPedido">No. de pedido / OC</label><input type="text" id="mPedido" list="dl-pedidos"></div>
@@ -528,7 +527,7 @@ details.blk .cnt:empty{display:none}
     <div class="sheet">
       <h2><span>Alta de refacción y carga inicial</span><span class="m" id="rEditFlag"></span></h2>
       <div class="body grid">
-        <div class="f"><label for="rCod">Código de almacén *</label><input type="text" id="rCod"></div>
+        <div class="f"><label for="rCod">SKU *</label><input type="text" id="rCod"></div>
         <div class="f wide"><label for="rDesc">Descripción *</label><input type="text" id="rDesc"></div>
         <div class="f"><label for="rComp">Componente del diagnóstico</label><select id="rComp"></select></div>
         <div class="f"><label for="rClase">Clase</label><select id="rClase"><option value="A">A · crítica / alto valor</option><option value="B" selected>B · media</option><option value="C">C · consumible</option></select></div>
@@ -547,7 +546,7 @@ details.blk .cnt:empty{display:none}
     <div class="sheet">
       <h2>Importar desde Excel</h2>
       <div class="body">
-        <p class="status" style="margin-top:0">Columnas reconocidas: Código, Descripción, Disponible, Consigna, Factura, Clase, Componente. Solo se dan de alta los códigos nuevos; los existentes no se tocan.</p>
+        <p class="status" style="margin-top:0">Columnas reconocidas: SKU (o Código), Descripción, Disponible, Consigna, Factura, Clase, Componente. Solo se dan de alta los SKU nuevos; los existentes no se tocan.</p>
         <input type="file" id="rImport" accept=".xlsx,.xls,.csv">
         <p class="status" id="rImpStatus"></p>
       </div>
@@ -1558,13 +1557,13 @@ $("#aExport").addEventListener("click", ()=>{
   const S = saldos(), R = Object.fromEntries(calcRepo().map(x=>[x.r.id,x]));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(refs.map(r=>{ const s=S[r.id]||{}, x=R[r.id]||{};
-    return {"Código":r.id,"Descripción":r.desc,"Clase":r.clase,"Unidad":r.unidad,"Disponible":s.disp||0,"Consigna":s.cons||0,"Tránsito":s.tran||0,
+    return {"SKU":r.id,"Descripción":r.desc,"Clase":r.clase,"Unidad":r.unidad,"Disponible":s.disp||0,"Consigna":s.cons||0,"Tránsito":s.tran||0,
       "Comprometido":x.comp||0,"Posición":x.pos||0,"Punto de reorden":x.rop||0,"Máximo":x.max||0,"Sugerido pedir":x.sug||0}; })), "Inventario");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movs.slice().sort((a,b)=>(a.fecha||"").localeCompare(b.fecha||"")).map(movRow)), "Movimientos");
   saveXlsx(wb, `inventario_refacciones_${today()}.xlsx`, $("#aExpStatus"), "Inventario descargado.");
 });
 function movRow(m){ const r = refById(m.ref)||{};
-  return {"Fecha":m.fecha,"Tipo":MOV_TIPOS[m.tipo]?.n||m.tipo,"Código":m.ref,"Descripción":r.desc||"","Cantidad":m.cant,
+  return {"Fecha":m.fecha,"Tipo":MOV_TIPOS[m.tipo]?.n||m.tipo,"SKU":m.ref,"Descripción":r.desc||"","Cantidad":m.cant,
     "Δ Disponible":m.dDisp||0,"Δ Consigna":m.dCons||0,"Δ Tránsito":m.dTran||0,"Pedido":m.pedido||"","Fecha estimada":m.eta||"","Factura":m.factura||"",
     "No. entrada":m.entrada||"","Vale":m.vale||"","Activo":m.activo||"","Entregado a":m.recibe||"","Autorizó":m.autorizo||"","Correo":m.correo||"",
     "Motivo":m.motivo||"","Estatus":m.estatus||"aplicado","Registró":m.registro||"","Nota":m.nota||""}; }
@@ -1718,8 +1717,8 @@ function clearRef(){
 $("#rLimpiar").addEventListener("click", clearRef);
 $("#rGuardar").addEventListener("click", ()=>{
   const id = $("#rCod").value.trim().toUpperCase(), desc = $("#rDesc").value.trim();
-  if(!id || !desc){ toast("Captura código y descripción."); return; }
-  if(!refEditing && refById(id)){ toast("Ese código ya existe. Búscalo abajo para editarlo."); return; }
+  if(!id || !desc){ toast("Captura SKU y descripción."); return; }
+  if(!refEditing && refById(id)){ toast("Ese SKU ya existe. Búscalo abajo para editarlo."); return; }
   const num = x => $("#"+x).value==="" ? null : Number($("#"+x).value);
   const rec = {id, desc, comp:$("#rComp").value, clase:$("#rClase").value, unidad:$("#rUnidad").value.trim()||"pza",
     entrega:num("rEntrega")??60, seg:num("rSeg")??15, cedis:num("rCedis")??0, min:num("rMin"), max:num("rMax"),
@@ -1771,7 +1770,7 @@ $("#rImport").addEventListener("change", async e=>{
         factura:String(pick(row,["factura","nofactura"])).trim(), nota:"Carga inicial (importación)", registro:usuario, creado:now, estatus:""}});
       nuevos++;
     });
-    $("#rImpStatus").textContent = `Importación lista: ${nuevos} refacciones nuevas, ${omitidos} renglones omitidos (sin código/descripción o ya existentes).`;
+    $("#rImpStatus").textContent = `Importación lista: ${nuevos} refacciones nuevas, ${omitidos} renglones omitidos (sin SKU/descripción o ya existentes).`;
     renderAll(); renderCat();
   }catch(err){ $("#rImpStatus").textContent = "No se pudo leer el archivo: " + err.message; }
   e.target.value = "";
@@ -1786,7 +1785,7 @@ function renderRepo(){
     <div class="kpi"><b>${conSug.reduce((a,x)=>a+x.sug,0)}</b><span>Piezas sugeridas</span></div>
     <div class="kpi"><b>${R.reduce((a,x)=>a+x.comp,0)}</b><span>Piezas comprometidas</span></div>
     <div class="kpi"><b>${R.filter(x=>x.disp<=0 && x.comp>0).length}</b><span>Comprometidas sin disponible</span></div>`;
-  $("#pTabla").innerHTML = R.length ? `<thead><tr><th>Código</th><th>Disp.</th><th>Cons.</th><th>Tráns.</th><th>Comp.</th><th>Posición</th><th>Reorden</th><th>Máx.</th><th>Pedir</th></tr></thead><tbody>` +
+  $("#pTabla").innerHTML = R.length ? `<thead><tr><th>SKU</th><th>Disp.</th><th>Cons.</th><th>Tráns.</th><th>Comp.</th><th>Posición</th><th>Reorden</th><th>Máx.</th><th>Pedir</th></tr></thead><tbody>` +
     R.map(x=>`<tr><td>${esc(x.r.id)}<br><small style="color:var(--muted)">${esc(x.r.desc)}</small></td><td class="v">${x.disp}</td><td class="v">${x.cons}</td><td class="v">${x.tran}</td>
       <td class="v">${x.comp}</td><td class="v">${x.pos}</td><td class="v">${x.rop}</td><td class="v">${x.max}</td><td class="v" style="color:${x.sug>0?"var(--bad)":"inherit"}">${x.sug}</td></tr>`).join("") + "</tbody>"
     : `<tbody><tr><td>Sin refacciones en catálogo.</td></tr></tbody>`;
@@ -1796,15 +1795,15 @@ function renderRepo(){
 $("#pExport").addEventListener("click", ()=>{
   const R = calcRepo(), hist = Number($("#pHist").value)||90;
   const wb = XLSX.utils.book_new();
-  const req = R.filter(x=>x.sug>0).map(x=>({"Código":x.r.id,"Descripción":x.r.desc,"Clase":x.r.clase,"Cantidad a pedir":x.sug,"Unidad":x.r.unidad,
+  const req = R.filter(x=>x.sug>0).map(x=>({"SKU":x.r.id,"Descripción":x.r.desc,"Clase":x.r.clase,"Cantidad a pedir":x.sug,"Unidad":x.r.unidad,
     "Disponible":x.disp,"Consigna":x.cons,"Tránsito":x.tran,"Comprometido":x.comp,"Posición":x.pos,"Punto de reorden":x.rop,"Máximo":x.max,
     "Consumo diario":Math.round(x.cd*100)/100,"Entrega (días)":x.r.entrega,"% otros CEDIS":x.r.cedis}));
   XLSX.utils.book_append_sheet(wb, req.length ? XLSX.utils.json_to_sheet(req) : XLSX.utils.aoa_to_sheet([["No hay refacciones por pedir"]]), "Requisición sugerida");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(R.map(x=>({"Código":x.r.id,"Descripción":x.r.desc,"Disponible":x.disp,"Consigna":x.cons,"Tránsito":x.tran,
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(R.map(x=>({"SKU":x.r.id,"Descripción":x.r.desc,"Disponible":x.disp,"Consigna":x.cons,"Tránsito":x.tran,
     "Comprometido":x.comp,"Posición":x.pos,"Punto de reorden":x.rop,"Máximo":x.max,"Sugerido":x.sug,[`Consumo diario (${hist} d)`]:Math.round(x.cd*100)/100}))), "Cálculo completo");
   const P = pendientes();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.cons.map(c=>({"Código":c.r.id,"Descripción":c.r.desc,"En consigna":c.cant,"Factura(s)":c.facts.join(", "),"Días en consigna":c.dias??""}))), "Consigna");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.transito.map(p=>({"Pedido":p.pedido,"Código":p.ref,"Descripción":refById(p.ref)?.desc||"","Pendiente":p.pend,"Fecha pedido":p.fecha,"Llegada estimada":p.eta}))), "Tránsito");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.cons.map(c=>({"SKU":c.r.id,"Descripción":c.r.desc,"En consigna":c.cant,"Factura(s)":c.facts.join(", "),"Días en consigna":c.dias??""}))), "Consigna");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(P.transito.map(p=>({"Pedido":p.pedido,"SKU":p.ref,"Descripción":refById(p.ref)?.desc||"","Pendiente":p.pend,"Fecha pedido":p.fecha,"Llegada estimada":p.eta}))), "Tránsito");
   saveXlsx(wb, `requisicion_sugerida_${today()}.xlsx`, $("#pStatus"), `Requisición sugerida: ${req.length} refacciones.`);
 });
 
