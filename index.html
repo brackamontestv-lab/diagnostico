@@ -529,6 +529,7 @@ details.blk .cnt:empty{display:none}
       <div class="body grid">
         <div class="f"><label for="rCod">SKU *</label><input type="text" id="rCod"></div>
         <div class="f wide"><label for="rDesc">Descripción *</label><input type="text" id="rDesc"></div>
+        <div class="f"><label for="rUbic">Ubicación (rack/pasillo/nivel)</label><input type="text" id="rUbic" placeholder="Ej. A-2-5"></div>
         <div class="f"><label for="rComp">Componente del diagnóstico</label><select id="rComp"></select></div>
         <div class="f"><label for="rClase">Clase</label><select id="rClase"><option value="A">A · crítica / alto valor</option><option value="B" selected>B · media</option><option value="C">C · consumible</option></select></div>
         <div class="f"><label for="rUnidad">Unidad</label><input type="text" id="rUnidad" value="pza"></div>
@@ -546,7 +547,7 @@ details.blk .cnt:empty{display:none}
     <div class="sheet">
       <h2>Importar desde Excel</h2>
       <div class="body">
-        <p class="status" style="margin-top:0">Columnas reconocidas: SKU (o Código), Descripción, Disponible, Consigna, Factura, Clase, Componente. Solo se dan de alta los SKU nuevos; los existentes no se tocan.</p>
+        <p class="status" style="margin-top:0">Columnas reconocidas: SKU (o Código), Descripción, Ubicación (o Rack), Disponible, Consigna, Factura, Clase, Componente. Solo se dan de alta los SKU nuevos; los existentes no se tocan.</p>
         <input type="file" id="rImport" accept=".xlsx,.xls,.csv">
         <p class="status" id="rImpStatus"></p>
       </div>
@@ -1531,7 +1532,7 @@ function renderExist(){
     <div class="kpi"><b>${tot.tran}</b><span>Piezas en tránsito</span></div>`;
   const list = refs.filter(r=>{
     const s = S[r.id]||{}, x = R[r.id]||{};
-    if(q && !(`${r.id} ${r.desc}`.toLowerCase().includes(q))) return false;
+    if(q && !(`${r.id} ${r.desc} ${r.ubic||""}`.toLowerCase().includes(q))) return false;
     if(f==="disp") return s.disp>0; if(f==="cons") return s.cons>0; if(f==="tran") return s.tran>0;
     if(f==="repo") return x.sug>0; if(f==="cero") return (s.disp+s.cons)<=0;
     return true;
@@ -1542,6 +1543,7 @@ function renderExist(){
     return `<div class="inv">
       <div class="top"><span class="cd">${esc(r.id)}</span><span class="pill">Clase ${esc(r.clase||"B")}</span></div>
       <div class="ds">${esc(r.desc)}</div>
+      <div class="ds" style="opacity:.75">📍 ${esc(r.ubic||"sin ubicación")}</div>
       <div class="qty">
         <div class="${s.disp>0?"ok":"bd"}"><b>${s.disp}</b><span>Disp.</span></div>
         <div class="${s.cons>0?"wn":""}"><b>${s.cons}</b><span>Consig.</span></div>
@@ -1557,7 +1559,7 @@ $("#aExport").addEventListener("click", ()=>{
   const S = saldos(), R = Object.fromEntries(calcRepo().map(x=>[x.r.id,x]));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(refs.map(r=>{ const s=S[r.id]||{}, x=R[r.id]||{};
-    return {"SKU":r.id,"Descripción":r.desc,"Clase":r.clase,"Unidad":r.unidad,"Disponible":s.disp||0,"Consigna":s.cons||0,"Tránsito":s.tran||0,
+    return {"SKU":r.id,"Descripción":r.desc,"Ubicación":r.ubic||"","Clase":r.clase,"Unidad":r.unidad,"Disponible":s.disp||0,"Consigna":s.cons||0,"Tránsito":s.tran||0,
       "Comprometido":x.comp||0,"Posición":x.pos||0,"Punto de reorden":x.rop||0,"Máximo":x.max||0,"Sugerido pedir":x.sug||0}; })), "Inventario");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movs.slice().sort((a,b)=>(a.fecha||"").localeCompare(b.fecha||"")).map(movRow)), "Movimientos");
   saveXlsx(wb, `inventario_refacciones_${today()}.xlsx`, $("#aExpStatus"), "Inventario descargado.");
@@ -1684,7 +1686,7 @@ function porContar(){
 }
 function renderConteo(){
   const L = porContar();
-  $("#cLista").innerHTML = L.length ? L.map(x=>`<div class="cnt-row"><div>${esc(x.r.id)} <span class="pill">Clase ${esc(x.r.clase||"B")}</span><small>${esc(x.r.desc)}${x.ult?` · último conteo ${esc(x.ult)}`:" · sin conteo"}</small></div>
+  $("#cLista").innerHTML = L.length ? L.map(x=>`<div class="cnt-row"><div>${esc(x.r.id)} <span class="pill">Clase ${esc(x.r.clase||"B")}</span><small>${esc(x.r.desc)} · 📍 ${esc(x.r.ubic||"sin ubicación")}${x.ult?` · último conteo ${esc(x.ult)}`:" · sin conteo"}</small></div>
     <input type="number" min="0" inputmode="numeric" data-cd="${esc(x.r.id)}" data-st="disp" aria-label="Disponible contado ${esc(x.r.id)}">
     <input type="number" min="0" inputmode="numeric" data-cd="${esc(x.r.id)}" data-st="cons" aria-label="Consigna contada ${esc(x.r.id)}"></div>`).join("")
     : `<div class="empty">No hay conteos pendientes esta semana.</div>`;
@@ -1710,7 +1712,7 @@ $("#cGuardar").addEventListener("click", ()=>{
 let refEditing = null;
 $("#rComp").innerHTML = `<option value="">— Sin vincular —</option>` + SECCIONES.map(s=>`<optgroup label="${esc(s.nombre)}">${s.items.map((it,i)=>`<option value="${key(s,i)}">${esc(it)}</option>`).join("")}</optgroup>`).join("");
 function clearRef(){
-  ["rCod","rDesc","rMin","rMax","rIniDisp","rIniCons","rIniFact"].forEach(id=>$("#"+id).value="");
+  ["rCod","rDesc","rUbic","rMin","rMax","rIniDisp","rIniCons","rIniFact"].forEach(id=>$("#"+id).value="");
   $("#rComp").value=""; $("#rClase").value="B"; $("#rUnidad").value="pza"; $("#rEntrega").value=60; $("#rSeg").value=15; $("#rCedis").value=0;
   refEditing = null; $("#rCod").disabled = false; $("#rEditFlag").textContent = ""; $$("#almCat [data-new]").forEach(e=>e.hidden=false);
 }
@@ -1720,7 +1722,7 @@ $("#rGuardar").addEventListener("click", ()=>{
   if(!id || !desc){ toast("Captura SKU y descripción."); return; }
   if(!refEditing && refById(id)){ toast("Ese SKU ya existe. Búscalo abajo para editarlo."); return; }
   const num = x => $("#"+x).value==="" ? null : Number($("#"+x).value);
-  const rec = {id, desc, comp:$("#rComp").value, clase:$("#rClase").value, unidad:$("#rUnidad").value.trim()||"pza",
+  const rec = {id, desc, ubic:$("#rUbic").value.trim(), comp:$("#rComp").value, clase:$("#rClase").value, unidad:$("#rUnidad").value.trim()||"pza",
     entrega:num("rEntrega")??60, seg:num("rSeg")??15, cedis:num("rCedis")??0, min:num("rMin"), max:num("rMax"),
     creado: refById(id)?.creado || new Date().toISOString(), actualizado:new Date().toISOString()};
   queue({action:"saveRef", record:rec});
@@ -1734,15 +1736,15 @@ $("#rGuardar").addEventListener("click", ()=>{
 });
 function renderCat(){
   const S = saldos(), q = $("#rq").value.trim().toLowerCase();
-  const list = refs.filter(r=>!q || `${r.id} ${r.desc}`.toLowerCase().includes(q)).sort((a,b)=>a.id.localeCompare(b.id));
+  const list = refs.filter(r=>!q || `${r.id} ${r.desc} ${r.ubic||""}`.toLowerCase().includes(q)).sort((a,b)=>a.id.localeCompare(b.id));
   $("#rLista").innerHTML = list.length ? list.map(r=>`<div class="rec"><div class="a">${esc(r.id)}</div><div class="tag">Clase ${esc(r.clase||"B")}</div>
-    <div class="m" style="grid-column:1/-1">${esc(r.desc)} · Disp. ${S[r.id]?.disp||0} · Consigna ${S[r.id]?.cons||0} · Entrega ${r.entrega??"—"} días</div>
+    <div class="m" style="grid-column:1/-1">${esc(r.desc)} · 📍 ${esc(r.ubic||"sin ubicación")} · Disp. ${S[r.id]?.disp||0} · Consigna ${S[r.id]?.cons||0} · Entrega ${r.entrega??"—"} días</div>
     <div class="acts2"><button class="btn small" data-redit="${esc(r.id)}">Editar</button></div></div>`).join("")
     : `<div class="empty">${refs.length?"Ninguna coincide.":"Catálogo vacío."}</div>`;
 }
 $("#rq").addEventListener("input", renderCat);
 $("#rLista").addEventListener("click", e=>{ const b = e.target.closest("[data-redit]"); if(!b) return; const r = refById(b.dataset.redit); if(!r) return;
-  $("#rCod").value = r.id; $("#rCod").disabled = true; $("#rDesc").value = r.desc; $("#rComp").value = r.comp||""; $("#rClase").value = r.clase||"B";
+  $("#rCod").value = r.id; $("#rCod").disabled = true; $("#rDesc").value = r.desc; $("#rUbic").value = r.ubic||""; $("#rComp").value = r.comp||""; $("#rClase").value = r.clase||"B";
   $("#rUnidad").value = r.unidad||"pza"; $("#rEntrega").value = r.entrega??60; $("#rSeg").value = r.seg??15; $("#rCedis").value = r.cedis??0;
   $("#rMin").value = r.min??""; $("#rMax").value = r.max??""; refEditing = r.id; $("#rEditFlag").textContent = "Editando";
   $$("#almCat [data-new]").forEach(e=>e.hidden=true); window.scrollTo(0,0);
@@ -1763,7 +1765,8 @@ $("#rImport").addEventListener("change", async e=>{
       if(!id || !desc){ omitidos++; return; }
       if(refById(id)){ omitidos++; return; }
       const clase = String(pick(row,["clase","abc"])).trim().toUpperCase();
-      queue({action:"saveRef", record:{id, desc, comp:compByName(pick(row,["componente"])), clase:["A","B","C"].includes(clase)?clase:"B", unidad:"pza",
+      const ubic = String(pick(row,["ubicacion","rack","posicionfisica","ubicacionalmacen","pasillo"])).trim();
+      queue({action:"saveRef", record:{id, desc, ubic, comp:compByName(pick(row,["componente"])), clase:["A","B","C"].includes(clase)?clase:"B", unidad:"pza",
         entrega:60, seg:15, cedis:0, min:null, max:null, creado:now, actualizado:now}});
       const d = Number(pick(row,["disponible","existencia","existenciadisponible","stock"]))||0, c = Number(pick(row,["consigna","enconsigna"]))||0;
       if(d||c) queue({action:"saveMov", record:{id:nid("m"), tipo:"inicial", ref:id, cant:d+c, fecha:today(), dDisp:d, dCons:c,
