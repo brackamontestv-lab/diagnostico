@@ -770,7 +770,15 @@ async function sync(){
 }
 function queue(op){
   if(op.action==="stock") outbox = outbox.filter(o=>!(o.action==="stock" && o.key===op.key));
-  outbox.push(op); applyOp(op); persist(); setStatus(); flush().then(setStatus);
+  outbox.push(op); applyOp(op); persist(); setStatus();
+  flush().then(()=>{
+    setStatus();
+    if(outbox.includes(op)){
+      toast(navigator.onLine
+        ? "⚠️ Se guardó en el teléfono pero NO se pudo confirmar en el servidor todavía. Sigue intentando solo."
+        : "Guardado en el teléfono. Sin conexión — se sincronizará solo cuando vuelva el internet.");
+    }
+  });
 }
 async function saveRecord(rec){ queue({action:"save", record:rec}); renderAll(); }
 async function deleteRecord(id){ queue({action:"delete", id}); renderAll(); }
@@ -1445,7 +1453,7 @@ const MOV_TIPOS = {
   inicial:   {n:"Carga inicial",                         roles:["admin","almacen"], d:(q,f)=>({dDisp:f.disp||0, dCons:f.cons||0}), ayuda:"Existencia física al iniciar el control."},
   pedido:    {n:"Pedido (en tránsito)",                  roles:["admin"],           d:q=>({dTran:q}),        fl:["pedido","eta"],                 req:["pedido"], ayuda:"Refacciones pedidas que aún no llegan."},
   cancelPed: {n:"Cancelar pedido",                       roles:["admin"],           d:q=>({dTran:-q}),       fl:["pedido"],                       req:["pedido"], ayuda:"Quita del tránsito un pedido que ya no llegará."},
-  recepcion: {n:"Recepción física → consigna",           roles:["admin","almacen"], d:(q,f)=>({dCons:q, dTran:f.pedido?-q:0}), fl:["pedido","factura"], req:["factura"], ayuda:"Llegó al almacén pero la factura aún no tiene entrada."},
+  recepcion: {n:"Recepción física → consigna",           roles:["admin","almacen"], d:(q,f)=>({dCons:q, dTran:f.pedido?-q:0}), fl:["pedido","factura"], req:[], ayuda:"Llegó al almacén pero la factura aún no tiene entrada. Si todavía no tienes el número de factura a la mano, puedes dejarlo en blanco y capturarlo después editando el movimiento."},
   liberacion:{n:"Liberación: factura con entrada → disponible", roles:["admin","almacen"], d:q=>({dCons:-q, dDisp:q}), fl:["factura","entrada"], req:["factura","entrada"], ayuda:"Juan Carlos ya dio entrada a la factura."},
   salida:    {n:"Salida con vale (disponible)",          roles:["admin","almacen"], d:q=>({dDisp:-q}),       fl:["vale","activo","recibe"],        req:["vale"], ayuda:"Entrega normal de refacción disponible."},
   salidaCons:{n:"Salida de consigna con autorización",   roles:["admin","almacen"], d:q=>({dCons:-q}),       fl:["vale","activo","recibe","factura","autorizo","correo","motivo"], req:["vale","autorizo","correo"], ayuda:"Requiere correo de autorización. Queda por autorizar en la app y pendiente de regularizar hasta que la factura tenga entrada."},
